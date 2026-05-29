@@ -4,11 +4,15 @@ import {Map} from "./c3nav_map";
 import {MapCursor} from "./dnd-plugins";
 import {DragDropMarker} from "./dnd-utils";
 import {DeviceMarker} from "./datamodel";
+import {NetBoxApi} from "./netbox_api";
 
 const netbox_c3nav_settings = JSON.parse(document.getElementById('map').dataset.settings);
-const c3nav_api_key = netbox_c3nav_settings.c3nav_api_key;
-const map = new Map(netbox_c3nav_settings.c3nav_url, c3nav_api_key)
+const map = new Map(netbox_c3nav_settings.c3nav_url, netbox_c3nav_settings.c3nav_api_key)
+const netBoxApi = new NetBoxApi(`${window.location.origin}/api/`)
 map.bind(document.getElementById('map') as HTMLDivElement)
+
+// @ts-ignore
+window.netBoxApi = netBoxApi
   
 // drang and drop stuff
 

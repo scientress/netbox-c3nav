@@ -25,11 +25,11 @@ export class DeviceMarker {
   setDeviceFromDOM(element: HTMLElement) {
     this.device = {
       id: Number(element.dataset.id),
-      url: `${document.location.protocol}//${document.location.host}/api/dcim/devices/${element.dataset.id}`,
+      url: `${document.location.origin}/api/dcim/devices/${element.dataset.id}`,
       name: element.dataset.name,
       display: element.dataset.name,
       description: element.dataset.description,
-      display_url: `${document.location.protocol}//${document.location.host}/dcim/devices/${element.dataset.id}`
+      display_url: `${document.location.origin}/dcim/devices/${element.dataset.id}`
     }
     console.log('set device from DOM', this.device)
   }
