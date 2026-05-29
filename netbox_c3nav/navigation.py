@@ -26,8 +26,15 @@ menu = PluginMenu(
                 link_text='Icons',
             ),
             PluginMenuItem(
-                link='home',
+                link='plugins:netbox_c3nav:overlay_list',
                 link_text='Overlays',
+                buttons=[
+                    PluginMenuButton(
+                        link='plugins:netbox_c3nav:overlay_add',
+                        title='Add',
+                        icon_class='mdi mdi-plus-thick',
+                    )
+                ]
             )
         ))
     )

@@ -1,5 +1,6 @@
 from django.core.cache import cache
 from django.db import models
+from django.db.models import Q
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from netbox.models import ChangeLoggedModel, NetBoxModel
@@ -47,21 +48,36 @@ class DevicePosition(ChangeLoggedModel):
 
 
 class Overlay(NetBoxModel):
-    name = models.CharField(_('Name'), max_length=50)
-    file = models.FileField(_('File'), upload_to=file_upload_path, blank=True, null=True)
-    external_url = models.URLField(blank=True, max_length=255)
+    name = models.CharField(_('name'), max_length=50)
+    description = models.CharField(_('description'), max_length=200, blank=True)
+
+    file = models.FileField(_('overlay file'), upload_to=file_upload_path, blank=True, null=True)
+    external_url = models.URLField(max_length=255, blank=True, null=True)
+    c3nav_source_id = models.PositiveIntegerField(verbose_name=_('c3nav source id'), blank=True, null=True, unique=True)
+
+    level_index = models.CharField(max_length=20, verbose_name=_('level index'), blank=True, null=True,
+                                   help_text=_('limits the overlay to a specific level'))
 
     bottom = models.DecimalField(_('bottom coordinate'), max_digits=6, decimal_places=2)
     left = models.DecimalField(_('left coordinate'), max_digits=6, decimal_places=2)
     top = models.DecimalField(_('top coordinate'), max_digits=6, decimal_places=2)
     right = models.DecimalField(_('right coordinate'), max_digits=6, decimal_places=2)
 
-    comments = models.TextField(blank=True)
-
     class Meta:
         ordering = ('name',)
         verbose_name = _('Overlay')
         verbose_name_plural = _('Overlays')
+        constraints = [
+            models.CheckConstraint(
+                name='file-or-external_url-or-c3nav_source_id',
+                condition=(
+                        Q(file__isnull=False, external_url__isnull=True, c3nav_source_id__isnull=True) |
+                        Q(file__isnull=True, external_url__isnull=False, c3nav_source_id__isnull=True) |
+                        Q(file__isnull=True, external_url__isnull=True, c3nav_source_id__isnull=False)
+                ),
+                violation_error_message=_('Can either use a file, external URL or c3nav source id'),
+            )
+        ]
 
     def get_absolute_url(self):
         return reverse('plugins:netbox_c3nav:overlay', args=[self.pk])

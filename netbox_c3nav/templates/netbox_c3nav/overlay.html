@@ -1,0 +1,52 @@
+{% extends 'generic/object.html' %}
+{% load render_table from django_tables2 %}
+
+{% block content %}
+  <div class="row mb-3">
+    <div class="col col-md-6">
+      <div class="card">
+
+        <h5 class="card-header">Overlay</h5>
+
+        <table class="table table-hover attr-table">
+          <tr>
+            <th scope="row">Name</th>
+            <td>{{ object.name }}</td>
+          </tr>
+          <tr>
+            <th scope="row">Description</th>
+            <td>{{ object.description }}</td>
+          </tr>
+          {% if object.file %}
+          <tr>
+            <th scope="row">File</th>
+            <td><a href="{{ object.file.url }}">{{ object.file }}</a></td>
+          </tr>
+          {% elif object.external_url %}
+          <tr>
+            <th scope="row">External URL</th>
+            <td>{{ object.external_url }}</td>
+          </tr>
+          {% elif object.c3nav_source_id %}
+          <tr>
+            <th scope="row">c3nav Source ID</th>
+            <td>{{ object.c3nav_source_id }}</td>
+          </tr>
+          {% endif %}
+          <tr>
+            <th scope="row">Level_Index</th>
+            <td>{{ object.level_index | default:"" }}</td>
+          </tr>
+          <tr>
+            <th scope="row">Bounds</th>
+            <td>{{ object.bounds }}</td>
+          </tr>
+        </table>
+      </div>
+      {% include 'inc/panels/custom_fields.html' %}
+    </div>
+    <div class="col col-md-6">
+      {% include 'inc/panels/tags.html' %}
+    </div>
+  </div>
+{% endblock content %}
