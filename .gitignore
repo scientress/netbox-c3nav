@@ -249,6 +249,7 @@ coverage
 *.njsproj
 *.sln
 *.sw?
+*.private.env.json
 
 *.tsbuildinfo
 
