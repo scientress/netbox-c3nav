@@ -29,7 +29,7 @@ export class DeviceMarker {
       name: element.dataset.name,
       display: element.dataset.name,
       description: element.dataset.description,
-      display_url: `/dcim/devices/${element.dataset.id}`
+      display_url: `${document.location.protocol}//${document.location.host}/dcim/devices/${element.dataset.id}`
     }
     console.log('set device from DOM', this.device)
   }
@@ -43,7 +43,7 @@ export class DeviceMarker {
     })
     let popupBody = ""
     if ("display_url" in this.device) {
-      popupBody += `<a href="${this.device.display_url || ""}" target="_blank">${this.device.name}</a>`
+      popupBody += `<a href="${this.device.display_url}" target="_blank">${this.device.name}</a>`
     } else {
       popupBody += this.device.name
     }
