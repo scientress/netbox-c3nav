@@ -14,6 +14,9 @@
 {% endblock %}
 
 {% block content %}
+    {# we need the csrf token in the JS to make POST/PUT/PATCH API requests #}
+    <input type="hidden" id="csrf_token" value="{{ csrf_token }}">
+
     {% with config=settings.PLUGINS_CONFIG.netbox_c3nav %}
         <div id="map" class="c3nav c3nav-map" data-settings="{{ config | json }}"></div>
         <div class="map-item-list">

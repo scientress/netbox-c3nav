@@ -76,6 +76,7 @@ manager.monitor.addEventListener('dragend', (event) => {
     marker.setDeviceFromDOM(srcElement)
     marker.setPosition(mapPos, map.getCurrentLevel())
     marker.attach(map.getCurrentMarkerLayer())
+    marker.save()
     source.element.remove()
     console.log('added marker', marker)
     console.log(

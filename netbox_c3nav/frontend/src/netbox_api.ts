@@ -1,6 +1,7 @@
 export class NetBoxApi {
   key: string = null;
   base: string
+  csrfToken?: string
 
   constructor(base: string, apiKey?: string) {
     this.base = base;
@@ -17,7 +18,19 @@ export class NetBoxApi {
     return url;
   }
 
-  async req(method:string, path: string, body?: object | Array<any>, content_type?: string, extra_headers?: object) {
+  getCSRFToken(): string {
+    if (typeof this.csrfToken === 'undefined') {
+      const csrfTokenField = document.getElementById('csrf_token') as HTMLInputElement;
+      if (csrfTokenField) {
+        this.csrfToken = csrfTokenField.value;
+      } else {
+        this.csrfToken = null
+      }
+    }
+    return this.csrfToken;
+  }
+
+  async req(method: string, path: string, body?: object | Array<any>, content_type?: string, extra_headers?: object) {
     const headers = {
       'Accept': 'application/json',
     }
@@ -26,6 +39,9 @@ export class NetBoxApi {
     }
     if (body && !content_type) {
       headers['Content-Type'] = 'application/json';
+    }
+    if (this.getCSRFToken()) {
+      headers['X-CSRFToken'] = this.getCSRFToken();
     }
     if (extra_headers) {
       for (const key in extra_headers) {
