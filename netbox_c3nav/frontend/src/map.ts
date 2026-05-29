@@ -5,7 +5,8 @@ import {Map} from "./c3nav_map";
 import {MapCursor} from "./dnd-plugins";
 import {Marker} from "leaflet";
 import {DCIM} from "./netbox_types";
-import {C3navPoisition} from "./c3nav_types";
+import {C3navApiTypes} from "./c3nav_types";
+import {C3navPosition} from "./netbox_c3nav_types";
 
 const netbox_c3nav_settings = JSON.parse(document.getElementById('map').dataset.settings);
 const c3nav_api_key = netbox_c3nav_settings.c3nav_api_key;
@@ -43,7 +44,7 @@ class DragDropMarker {
 
 class DeviceMarker {
   id: number | null = null
-  position: C3navPoisition | null = null
+  position: C3navPosition | null = null
   leafletMarker: Marker | null = null
   device: DCIM.DeviceBrief | DCIM.Device | null = null
 
@@ -51,11 +52,12 @@ class DeviceMarker {
     this.id = id || null
   }
 
-  setPosition(pos: L.LatLng, level: string) {
+  setPosition(pos: L.LatLng, level: number | C3navApiTypes.LevelSchema) {
     this.position = {
       x: pos.lng,
       y: pos.lat,
-      level: level
+      level_id: (typeof level === 'number') ? level : level.id,
+      level_index: (typeof level === 'number') ? undefined : level.level_index,
     }
   }
 
@@ -154,7 +156,7 @@ manager.monitor.addEventListener('dragend', (event) => {
     console.log('map pos:', mapPos)
     const marker = new DeviceMarker()
     marker.setDeviceFromDOM(srcElement)
-    marker.setPosition(mapPos, map.getCurrentLevel().level_index)
+    marker.setPosition(mapPos, map.getCurrentLevel())
     marker.attach(map.getCurrentOverlayGroup())
     source.element.remove()
     console.log('added marker', marker)

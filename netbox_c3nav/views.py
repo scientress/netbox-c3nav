@@ -12,6 +12,6 @@ class MapView(PermissionRequiredMixin, View):
             request,
             'netbox_c3nav/map.html',
             context={
-                'unpositioned_items': Device.objects.all().filter(rack__isnull=True),
+                'unpositioned_items': Device.objects.all().filter(rack__isnull=True, c3nav_position__isnull=True),
             }
         )

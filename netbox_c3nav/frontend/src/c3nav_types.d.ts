@@ -74,9 +74,3 @@ export namespace C3navApiTypes {
     door_height: number
   }
 }
-
-export interface C3navPoisition {
-  x: number
-  y: number
-  level: string | null
-}

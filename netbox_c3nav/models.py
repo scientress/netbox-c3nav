@@ -8,21 +8,23 @@ from netbox_c3nav.utils import file_upload_path
 
 
 class DevicePosition(ChangeLoggedModel):
-    device = models.ForeignKey('dcim.Device', on_delete=models.CASCADE, verbose_name=_('device'))
+    device = models.OneToOneField('dcim.Device', on_delete=models.CASCADE, verbose_name=_('device'))
     x = models.FloatField(verbose_name=_('x/Longitude'))
     y = models.FloatField(verbose_name=_('y/Latitude'))
     level_id = models.PositiveIntegerField(verbose_name=_('level id'))
-    level_index = models.CharField(max_length=20, verbose_name=_('level index'), unique=True,
-                                   help_text=_('used for coordinates'))
+    level_index = models.CharField(max_length=20, verbose_name=_('level index'), help_text=_('used for coordinates'))
 
-    def get_c3nav_cords(self) -> str:
+    @property
+    def c3nav_cords(self) -> str:
         return f'c:{self.level_index}:{self.x:.02f}:{self.y:.02f}'
 
-    def get_c3nav_url(self) -> str:
+    @property
+    def c3nav_url(self) -> str:
         from netbox import settings
         return f'{settings.PLUGINS_CONFIG.netbox_c3nav.rstrip('/')}/l/{self.get_c3nav_cords()}'
 
-    def get_geojson_dict(self) -> dict:
+    @property
+    def geojson(self) -> dict:
         return {
             'type': 'Feature',
             'id': self.pk,
@@ -38,6 +40,7 @@ class DevicePosition(ChangeLoggedModel):
         }
 
     class Meta:
+        ordering = ('id',)
         verbose_name = _('Device Position')
         verbose_name_plural = _('Device Positions')
         default_related_name = 'c3nav_position'
