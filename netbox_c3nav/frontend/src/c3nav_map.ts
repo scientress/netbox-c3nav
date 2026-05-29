@@ -21,6 +21,8 @@ export class Map {
 
   levelControl: any
   overlayGroups: {[levelId: string]: L.LayerGroup}
+  markerLayers: {[levelId: string]: L.LayerGroup}
+  overlayLayers: {[levelId: string]: L.LayerGroup}
 
 
   constructor(instanceUrl: string, apiKey?: string) {
@@ -29,11 +31,13 @@ export class Map {
     this.api = new C3NavApi(`${instanceUrl}/api/v2/`, apiKey)
 
     this.overlayGroups = {}
+    this.markerLayers = {}
+    this.overlayLayers = {}
 
     console.log('map init', this, this.api)
   }
 
-  async bind(element: HTMLDivElement) {
+  public async bind(element: HTMLDivElement) {
     this.container = element;
     if (this.apiKey) {
       await this.api.get('updates/fetch/')
@@ -65,19 +69,31 @@ export class Map {
     this.levels = await this.api.get('mapdata/levels') as C3navApiTypes.LevelSchema[]
     this.levels.sort((a, b) => b.base_altitude - a.base_altitude)
     this.levelsById = {}
+
     for (const l of this.levels) {
       this.levelsById[l.id] = l
       if (l.on_top_of !== null) continue
       this.overlayGroups[l.id] = this.levelControl.addLevel(l.id, l.short_label)
+      this.markerLayers[l.id] = L.layerGroup().addTo(this.overlayGroups[l.id])
+      this.overlayLayers[l.id] = L.layerGroup().addTo(this.overlayGroups[l.id])
     }
+
     this.levelControl.setLevel(this.map_settings.initial_level)
   }
 
-  getCurrentLevel(): C3navApiTypes.LevelSchema {
+  public getCurrentLevel(): C3navApiTypes.LevelSchema {
     return this.levelsById[this.levelControl.currentLevel]
   }
 
-  getCurrentOverlayGroup(): LayerGroup {
+  public getCurrentOverlayGroup(): LayerGroup {
     return this.overlayGroups[this.levelControl.currentLevel]
+  }
+
+  public getCurrentMarkerLayer(): LayerGroup {
+    return this.markerLayers[this.levelControl.currentLevel]
+  }
+
+  public getCurrentOverlayLayer(): LayerGroup {
+    return this.overlayLayers[this.levelControl.currentLevel]
   }
 }
