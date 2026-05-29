@@ -1,0 +1,40 @@
+{% extends 'generic/_base.html' %}
+{% load buttons %}
+{% load render_table from django_tables2 %}
+{% load static %}
+{% load perms %}
+{% load helpers %}
+
+{% block title %}Map{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="{% static 'netbox_c3nav/vendor/leaflet/leaflet.css' %}" />
+    <link rel="stylesheet" href="{% static 'netbox_c3nav/map.css' %}" />
+{#    <script src="{% static 'netbox_c3nav/vendor/leaflet/leaflet.js' %}"></script>#}
+{% endblock %}
+
+{% block content %}
+    {% with config=settings.PLUGINS_CONFIG.netbox_c3nav %}
+        <div id="map" class="c3nav c3nav-map" data-settings="{{ config | json }}"></div>
+        <div class="map-item-list">
+            <h2>Un-Positioned Items</h2>
+            <ul class="list-group map-unpositioned-items">
+                {% for item in unpositioned_items %}
+                <li class="list-group-item" data-id="{{ item.id }}" data-name="{{ item.name }}" data-description="{{ item.description }}" date-url="{% url 'dcim:device' item.id %}">
+                    {{ item }} <span class="text-secondary">in {{ item.location }}</span>
+                    {% if item.description %}<br><span class="text-secondary">{{ item.description }}</span>{% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endwith %}
+{% endblock %}
+
+{% block javascript %}
+    <script src="{% static 'netbox_c3nav/map.js' %}"></script>
+    {% if settings.DEBUG %}
+    <script type="module" src="http://localhost:5173/src/map.ts"></script>
+    {% else %}
+    <script type="module" src="{% static 'netbox_c3nav/vite/map.iife.js' %}"></script>
+    {% endif %}
+{% endblock %}

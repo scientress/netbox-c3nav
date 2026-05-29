@@ -1,0 +1,45 @@
+#map {
+    /*height: 64vh;*/
+    flex-grow: 1;
+}
+
+#page-content {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+div.page-body {
+    flex-grow: 1;
+}
+
+div.page-body div.container-fluid {
+    display: flex;
+    flex-direction: row;
+    flex-grow: 1;
+    align-items: stretch;
+}
+
+div.map-item-list {
+
+    padding-left: 1rem;
+    display: flex;
+    flex-direction: column;
+    /*align-items: stretch;*/
+    justify-content: flex-start;
+}
+
+div.map-item-list > ul {
+    min-height: 0;
+    overflow-y: scroll;
+    /* because css is garbage this is the only way to prevent this div from growing */
+    height: 60vh;
+}
+
+.leaflet-control-levels.leaflet-control {
+
+}
+
+.leaflet-control-levels.leaflet-control .current {
+    font-weight: bold;
+}
