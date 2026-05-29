@@ -1,3 +1,4 @@
+import {DCIM} from "./netbox_types";
 
 export interface C3navPosition {
   id?: number;
@@ -6,7 +7,7 @@ export interface C3navPosition {
   y: number
   level_id: number
   level_index?: string | null
-  device?: object
+  device?: DCIM.DeviceBrief
   c3nav_cords?: string
   c3nav_url?: string
   geojson?: object

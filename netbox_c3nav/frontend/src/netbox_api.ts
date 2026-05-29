@@ -71,3 +71,12 @@ export class NetBoxApi {
     return this.req('PUT', path, data).then(r => r.json());
   }
 }
+
+export const netBoxApi = new NetBoxApi(`${window.location.origin}/api/`)
+
+export interface ListResponse {
+  count: number
+  next: string | null
+  previous: string | null
+  results: Array<any>
+}

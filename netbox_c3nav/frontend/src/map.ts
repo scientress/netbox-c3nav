@@ -3,17 +3,20 @@ import {pointerIntersection} from '@dnd-kit/collision';
 import {Map} from "./c3nav_map";
 import {MapCursor} from "./dnd-plugins";
 import {DragDropMarker} from "./dnd-utils";
-import {DeviceMarker} from "./datamodel";
-import {NetBoxApi} from "./netbox_api";
-
-const netbox_c3nav_settings = JSON.parse(document.getElementById('map').dataset.settings);
-const map = new Map(netbox_c3nav_settings.c3nav_url, netbox_c3nav_settings.c3nav_api_key)
-const netBoxApi = new NetBoxApi(`${window.location.origin}/api/`)
-map.bind(document.getElementById('map') as HTMLDivElement)
+import {DeviceMarker, loadMarkers} from "./datamodel";
+import {ListResponse, netBoxApi} from "./netbox_api";
+import {C3navPosition} from "./netbox_c3nav_types";
 
 // @ts-ignore
 window.netBoxApi = netBoxApi
-  
+
+const netbox_c3nav_settings = JSON.parse(document.getElementById('map').dataset.settings);
+const map = new Map(netbox_c3nav_settings.c3nav_url, netbox_c3nav_settings.c3nav_api_key)
+map.bind(document.getElementById('map') as HTMLDivElement).then(() => {
+  loadMarkers(map);
+})
+
+
 // drang and drop stuff
 
 const manager = new DragDropManager({
