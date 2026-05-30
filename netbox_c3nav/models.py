@@ -4,6 +4,7 @@ from django.db.models import Q
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from netbox.models import ChangeLoggedModel, NetBoxModel
+from netbox.plugins import get_plugin_config
 
 from netbox_c3nav.utils import file_upload_path
 
@@ -21,8 +22,7 @@ class DevicePosition(ChangeLoggedModel):
 
     @property
     def c3nav_url(self) -> str:
-        from netbox import settings
-        return f'{settings.PLUGINS_CONFIG.netbox_c3nav.rstrip('/')}/l/{self.get_c3nav_cords()}'
+        return f'{get_plugin_config('netbox_c3nav', 'c3nav_url').rstrip('/')}/l/{self.c3nav_cords}'
 
     @property
     def geojson(self) -> dict:
