@@ -11,11 +11,13 @@ class MapView(PermissionRequiredMixin, View):
     permission_required = ("dcim.view_site", "dcim.view_device")
 
     def get(self, request):
+        unpositioned_devices = (Device.objects.all().filter(rack__isnull=True, c3nav_position__isnull=True).
+                                restrict(request.user, 'view'))
         return render(
             request,
             'netbox_c3nav/map.html',
             context={
-                'unpositioned_items': Device.objects.all().filter(rack__isnull=True, c3nav_position__isnull=True),
+                'unpositioned_items': unpositioned_devices,
             }
         )
 
