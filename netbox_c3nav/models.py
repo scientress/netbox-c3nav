@@ -79,6 +79,11 @@ class Overlay(NetBoxModel):
             )
         ]
 
+    def delete(self, using=None, keep_parents=False):
+        if self.file:
+            self.file.delete()
+        return super().delete(using=using, keep_parents=keep_parents)
+
     def get_absolute_url(self):
         return reverse('plugins:netbox_c3nav:overlay', args=[self.pk])
 
