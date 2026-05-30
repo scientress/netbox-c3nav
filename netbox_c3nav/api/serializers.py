@@ -29,5 +29,5 @@ class OverlaySerializer(NetBoxModelSerializer):
         model = Overlay
         fields = ['id', 'url', 'name', 'description', 'file', 'external_url', 'c3nav_source_id', 'level_index',
                   'bottom', 'left', 'top', 'right', 'bounds', 'tags', 'custom_fields', 'created', 'last_updated']
-        brief_fields = ['id', 'url', 'name', 'description', 'file', 'external_url', 'bounds']
+        brief_fields = ['id', 'url', 'name', 'description', 'file', 'external_url', 'level_index', 'bounds']
         read_only_fields = ['bounds']

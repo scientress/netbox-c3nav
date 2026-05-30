@@ -16,4 +16,5 @@ class OverlayForm(NetBoxModelForm):
 
     class Meta:
         model = Overlay
-        fields = ('name', 'description', 'file', 'external_url', 'level_index', 'bottom', 'left', 'top', 'right', 'tags')
+        fields = ('name', 'description', 'file', 'external_url', 'level_index', 'bottom', 'left', 'top', 'right',
+                  'tags')

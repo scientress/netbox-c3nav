@@ -71,9 +71,9 @@ class Overlay(NetBoxModel):
             models.CheckConstraint(
                 name='file-or-external_url-or-c3nav_source_id',
                 condition=(
-                        Q(file__isnull=False, external_url__isnull=True, c3nav_source_id__isnull=True) |
-                        Q(file__isnull=True, external_url__isnull=False, c3nav_source_id__isnull=True) |
-                        Q(file__isnull=True, external_url__isnull=True, c3nav_source_id__isnull=False)
+                        ~Q(file='') & Q(external_url__isnull=True, c3nav_source_id__isnull=True) |
+                        Q(file='', external_url__isnull=False, c3nav_source_id__isnull=True) |
+                        Q(file='', external_url__isnull=True, c3nav_source_id__isnull=False)
                 ),
                 violation_error_message=_('Can either use a file, external URL or c3nav source id'),
             )
