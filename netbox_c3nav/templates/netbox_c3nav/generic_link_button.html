@@ -1,0 +1,4 @@
+<a class="btn btn-{{ button_type | default:'primary' }} {{ class_extra | default:'' }}" role="button" href="{{ href }}"{% if target %} target="{{ target }}"{% endif %}>
+    {% if icon %}<i class="mdi {{ icon }}"></i>{% endif %}
+    {{ title }}
+</a>
