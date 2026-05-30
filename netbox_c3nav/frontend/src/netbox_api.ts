@@ -10,7 +10,7 @@ export class NetBoxApi {
     }
   }
 
-  make_url(path: string) {
+  make_url(path: string): URL {
     const url = new URL(path, this.base);
     if (!url.pathname.endsWith('/')) {
       url.pathname += '/';
@@ -30,7 +30,7 @@ export class NetBoxApi {
     return this.csrfToken;
   }
 
-  async req(method: string, path: string, body?: object | Array<any>, content_type?: string, extra_headers?: object) {
+  async req(method: string, path: string, body?: object | any[], content_type?: string, extra_headers?: object): Promise<Response> {
     const headers = {
       'Accept': 'application/json',
     }
@@ -58,11 +58,11 @@ export class NetBoxApi {
     return await fetch(this.make_url(path), init);
   }
 
-  get(path: string) {
+  get(path: string): Promise<Object|[any[]]|string|number> {
     return this.req('GET', path).then(r => r.json());
   }
 
-  async get_with_etag(path: string, etag: string) {
+  async get_with_etag(path: string, etag: string): Promise<Object|[any[]]|string|number> {
     const res = await this.req('GET', path, undefined, undefined, {
       'If-None-Match': etag
     });
@@ -79,20 +79,20 @@ export class NetBoxApi {
     };
   }
 
-  post(path: string, data: object | Array<any>) {
+  post(path: string, data: object | any[]): Promise<Object|[any[]]|string|number> {
     return this.req('POST', path, data).then(r => r.json());
   }
 
-  put(path: string, data : object | Array<any>) {
+  put(path: string, data : object | any[]): Promise<Object|[any[]]|string|number> {
     return this.req('PUT', path, data).then(r => r.json());
   }
 }
 
-export const netBoxApi = new NetBoxApi(`${window.location.origin}/api/`)
+export const netBoxApi: NetBoxApi = new NetBoxApi(`${window.location.origin}/api/`)
 
 export interface ListResponse {
   count: number
   next: string | null
   previous: string | null
-  results: Array<any>
+  results: any[]
 }
