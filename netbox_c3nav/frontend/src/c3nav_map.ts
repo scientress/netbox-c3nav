@@ -19,7 +19,7 @@ export class Map {
   levels: C3navApiTypes.LevelSchema[]
   levelsById: {[id: number]: C3navApiTypes.LevelSchema}
 
-  levelControl: any
+  levelControl: LevelControl
   overlayGroups: {[levelId: string]: L.LayerGroup}
   markerLayers: {[levelId: string]: L.LayerGroup}
   overlayLayers: {[levelId: string]: L.LayerGroup}
@@ -82,18 +82,18 @@ export class Map {
   }
 
   public getCurrentLevel(): C3navApiTypes.LevelSchema {
-    return this.levelsById[this.levelControl.currentLevel]
+    return this.levelsById[this.levelControl.getLevel()]
   }
 
   public getCurrentOverlayGroup(): LayerGroup {
-    return this.overlayGroups[this.levelControl.currentLevel]
+    return this.overlayGroups[this.levelControl.getLevel()]
   }
 
   public getCurrentMarkerLayer(): LayerGroup {
-    return this.markerLayers[this.levelControl.currentLevel]
+    return this.markerLayers[this.levelControl.getLevel()]
   }
 
   public getCurrentOverlayLayer(): LayerGroup {
-    return this.overlayLayers[this.levelControl.currentLevel]
+    return this.overlayLayers[this.levelControl.getLevel()]
   }
 }

@@ -40,7 +40,8 @@ export class LevelControl extends L.Control {
       })
   }
     
-  addLevel(id: string, title: string): L.LayerGroup {
+  addLevel(id: number|string, title: string): L.LayerGroup {
+    id = String(id)
     this._tileLayers[id] = this.createTileLayer(id)
     const overlay = L.layerGroup()
     this._overlayLayers[id] = overlay
@@ -58,7 +59,8 @@ export class LevelControl extends L.Control {
     return overlay
   }
     
-  setLevel(id: string): boolean {
+  setLevel(id: number|string): boolean {
+    id = String(id)
     if (id === this.currentLevel) return true
     if (id !== null && this._tileLayers[id] === undefined) return false
 
@@ -74,6 +76,10 @@ export class LevelControl extends L.Control {
     }
     this.currentLevel = id
     return true
+  }
+
+  getLevel(): string {
+    return this.currentLevel
   }
 
   _levelClick(e: MouseEvent): void {

@@ -16,6 +16,8 @@ map.bind(document.getElementById('map') as HTMLDivElement).then(() => {
   loadMarkers(map);
 })
 
+// @ts-ignore
+window.map = map
 
 // drang and drop stuff
 
