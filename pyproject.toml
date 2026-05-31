@@ -1,7 +1,36 @@
 [project]
 name = "netbox-c3nav"
 version = "0.1.0"
-requires-python = ">=3.14"
-dependencies = [
+authors = [
+    {name = "Jenny Danzmayr", email = "netbox@scientress.at"},
+]
+description = "NetBox plugin for placing devices on a c3nav map"
+readme = "README.md"
+license-files = ["LICENSE"]
+keywords = ["netbox", "netbox-plugin"]
+
+classifiers=[
+    'Development Status :: 3 - Alpha',
+    'Framework :: Django',
+    'Framework :: Django :: 5.1',
+    'Intended Audience :: Developers',
+    'Intended Audience :: System Administrators',
+    'Intended Audience :: Telecommunications Industry',
+    'Natural Language :: English',
+    'Programming Language :: Python :: 3 :: Only',
+    'Programming Language :: Python :: 3.13',
+    'Programming Language :: Python :: 3.14',
+    'Topic :: System :: Networking',
+]
+
+requires-python = ">=3.13"
+
+[project.optional-dependencies]
+ide = [
     "djangorestframework-stubs>=3.17.0",
 ]
+
+[project.urls]
+Documentation = "https://codeberg.org/scientress/netbox-c3nav/blob/main/README.md"
+Source = "https://codeberg.org/scientress/netbox-c3nav"
+Tracker = "https://codeberg.org/scientress/netbox-c3nav/issues"
