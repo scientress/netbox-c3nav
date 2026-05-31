@@ -20,23 +20,25 @@ map.bind(document.getElementById('map') as HTMLDivElement).then(async () => {
   console.log('loading markers')
 
   markers.push(...await loadMarkers(map));
-  unlockMarkersButton.addEventListener('click', (event) => {
-    if (unlockMarkersButton.classList.contains('active')) {
-      unlockMarkersButton.classList.remove('active')
-      unlockMarkersButton.innerHTML = unlockMarkersButton.innerHTML.replace('Lock', 'Unlock');
-      unlockMarkersButton.title = 'Make markers moveable'
-      markers.forEach(marker => {
-        marker.lock()
-      })
-    } else {
-      unlockMarkersButton.classList.add('active')
-      unlockMarkersButton.innerHTML = unlockMarkersButton.innerHTML.replace('Unlock', 'Lock');
-      unlockMarkersButton.title = 'Fix markers is position'
-      markers.forEach(marker => {
-        marker.unlock()
-      })
-    }
-  })
+  if (unlockMarkersButton) {
+    unlockMarkersButton.addEventListener('click', (event) => {
+      if (unlockMarkersButton.classList.contains('active')) {
+        unlockMarkersButton.classList.remove('active')
+        unlockMarkersButton.innerHTML = unlockMarkersButton.innerHTML.replace('Lock', 'Unlock');
+        unlockMarkersButton.title = 'Make markers moveable'
+        markers.forEach(marker => {
+          marker.lock()
+        })
+      } else {
+        unlockMarkersButton.classList.add('active')
+        unlockMarkersButton.innerHTML = unlockMarkersButton.innerHTML.replace('Unlock', 'Lock');
+        unlockMarkersButton.title = 'Fix markers is position'
+        markers.forEach(marker => {
+          marker.unlock()
+        })
+      }
+    })
+  }
 
   map.addEventListener('levelchange', (event) => {
     if (unlockMarkersButton.classList.contains('active')) {
