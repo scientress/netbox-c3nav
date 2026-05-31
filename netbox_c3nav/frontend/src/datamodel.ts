@@ -148,26 +148,8 @@ export async function loadOverlays(map: Map) {
   ).then(groupedOverlays => {
     console.log('groupedOverlays', groupedOverlays)
     for (const groupName in groupedOverlays) {
-      groupedOverlays[groupName].forEach((overlayObject: C3navOverlayBrief) => {
-        console.log(`groupName: ${groupName} - source: ${overlayObject.name}`)
-        const bounds = L.GeoJSON.coordsToLatLngs(overlayObject.bounds)
-        const options = {
-          opacity: 0.3,
-          zIndex: 10,
-        }
-        let layer = null
-        if (overlayObject.external_url && overlayObject.external_url.includes('{x}')) {
-          // overlay is external and a XYZ Layer
-          layer = new L.TileLayer(overlayObject.external_url, options)
-        } else if (overlayObject.external_url) {
-          layer = new L.ImageOverlay(overlayObject.external_url, bounds, options)
-        } else if (overlayObject.file) {
-          layer = new L.ImageOverlay(overlayObject.file, bounds, options)
-        } else {
-          console.error('overlay is invalid', overlayObject)
-          return
-        }
-        map.overlayControl.addOverlay(layer, overlayObject.name, groupName)
+      groupedOverlays[groupName].forEach((overlay: C3navOverlayBrief) => {
+        map.overlayControl.addOverlay(overlay, groupName)
       })
     }
     map.overlayControl.addTo(map.map)

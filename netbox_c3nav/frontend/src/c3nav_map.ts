@@ -66,8 +66,7 @@ export class Map {
       baseUrl: (this.map_settings.tile_server || `${this.instanceUrl}/map`)
     })
     this.levelControl.addTo(this.map)
-
-    this.overlayControl = new OverlayControl({})
+    this.overlayControl = new OverlayControl(this.levelControl, {})
 
     this.levels = await this.api.get('mapdata/levels') as C3navApiTypes.LevelSchema[]
     this.levels.sort((a, b) => b.base_altitude - a.base_altitude)

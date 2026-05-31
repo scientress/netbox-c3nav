@@ -71,7 +71,7 @@ export class LevelControl extends L.Control {
     const levelId = level.id.toString()
     const tileLayer = this.createTileLayer(levelId)
     this._tileLayers[levelId] = tileLayer
-    const overlay = L.layerGroup()
+    const overlay = L.layerGroup([], {pane: 'overlayPane'})
     this._overlayLayers[levelId] = overlay
 
     const link = L.DomUtil.create('a', '', this._container)
@@ -131,6 +131,14 @@ export class LevelControl extends L.Control {
 
   getLevels(): {[key: string]: CombinedLevelObject} {
     return this.levels
+  }
+
+  getLevelsByIndex(): {[key: string]: CombinedLevelObject} {
+    const levelsByIndex = {}
+    for (const levelId in this.levels) {
+      levelsByIndex[this.levels[levelId].level_index] = this.levels[levelId]
+    }
+    return levelsByIndex
   }
 
   _levelClick(e: MouseEvent): void {
@@ -196,7 +204,7 @@ export interface OverlayGroup {
 
 export class OverlayControl extends L.Control {
 
-  private _overlays: { [key: string]: OverlayEntry } = null
+  private _overlays: { [key: string]: CombinedOverlayEntry } = null
   private _groups: { [group: string]: OverlayGroup } = null
   private _initialActiveOverlays: string[] = null
   private _initialCollapsedGroups: string[] = null
@@ -205,16 +213,18 @@ export class OverlayControl extends L.Control {
   private _pin: HTMLDivElement
   private _pinned: boolean = false
   private _expanded: boolean = false
+  private levelControl: LevelControl
   private _map: L.Map
 
   options: OverlayControlOptions
 
-  constructor(options: OverlayControlOptions) {
+  constructor(levelControl: LevelControl, options: OverlayControlOptions) {
     super(options);
     this._overlays = {}
     this._groups = {}
     this._initialActiveOverlays = []
     this._initialCollapsedGroups = []
+    this.levelControl = levelControl
   }
 
   onAdd(map: L.Map): HTMLElement {
@@ -248,7 +258,7 @@ export class OverlayControl extends L.Control {
     for (const overlay of this._initialActiveOverlays) {
       if (overlay in this._overlays) {
         this._overlays[overlay].visible = true;
-        this._overlays[overlay].layer.addTo(this._map);
+        this.showOverlay(this._overlays[overlay])
       }
     }
 
@@ -284,31 +294,73 @@ export class OverlayControl extends L.Control {
     return this._container;
   }
 
-  addOverlay(layer: L.Layer, name: string, group: string) {
-    const l = {
-      layer,
-      name,
-      group,
-      visible: this._initialActiveOverlays !== null && this._initialActiveOverlays.includes(name),
-    };
-    this._overlays[name] = l;
+  addOverlay(overlay: C3navOverlayBrief, group?: string) {
+    if (!group) {
+      group = 'General'
+    }
+
+    const bounds = L.GeoJSON.coordsToLatLngs(overlay.bounds)
+    const options = {
+      opacity: 0.3,
+      zIndex: 300,
+    }
+
+    let layer = null
+    if (overlay.external_url && overlay.external_url.includes('{x}')) {
+      // overlay is external and a XYZ Layer
+      layer = new L.TileLayer(overlay.external_url, options)
+    } else if (overlay.external_url) {
+      layer = new L.ImageOverlay(overlay.external_url, bounds, options)
+    } else if (overlay.file) {
+      layer = new L.ImageOverlay(overlay.file, bounds, options)
+    } else {
+      console.error('overlay is invalid', overlay)
+      return
+    }
+
+    const overlayEntry: CombinedOverlayEntry = Object.assign({
+      layer: layer,
+      name: overlay.name,
+      group: group,
+      visible: this._initialActiveOverlays !== null && this._initialActiveOverlays.includes(overlay.name),
+    } as OverlayEntry, overlay);
+
+    this._overlays[overlay.name] = overlayEntry;
     if (group in this._groups) {
-      this._groups[group].overlays.push(l);
+      this._groups[group].overlays.push(overlayEntry);
     } else {
       this._groups[group] = {
         expanded: this._initialCollapsedGroups === null || !this._initialCollapsedGroups.includes(group),
-        overlays: [l],
+        overlays: [overlayEntry],
       };
     }
     this.render();
   }
 
+  showOverlay(overlay: CombinedOverlayEntry) {
+    if (overlay.level_index) {
+      const level = this.levelControl.getLevelsByIndex()[overlay.level_index]
+      overlay.layer.addTo(level.overlayLayer)
+    } else {
+      overlay.layer.addTo(this._map);
+    }
+  }
+
+  hideOverlay(overlay: CombinedOverlayEntry) {
+    if (overlay.level_index) {
+      const level = this.levelControl.getLevelsByIndex()[overlay.level_index]
+      level.overlayLayer.removeLayer(overlay.layer)
+    } else {
+      this._map.removeLayer(overlay.layer)
+    }
+  }
+
   updateOverlay(id: string) {
     const overlay = this._overlays[id];
     if (overlay.visible) {
-      overlay.layer.addTo(this._map);
+      this.showOverlay(overlay)
     } else {
-      this._map.removeLayer(overlay.layer);
+      this.hideOverlay(overlay)
     }
     const activeOverlays: string[] = Object.keys(this._overlays).filter(k => this._overlays[k].visible);
     localStorage.setItem('c3nav.editor.overlays.active-overlays', JSON.stringify(activeOverlays));
