@@ -145,7 +145,7 @@ Contributions are welcome, but please talk to me first since this is plugin is W
 
 ### Reporting Bugs
 
-Please report bugs by opening an issue on our [GitHub Issues](https://codeberg.org/scientress/netbox-c3nav/issues) page. When reporting bugs, please include:
+Please report bugs by opening an issue on our [Codeberg Issues](https://codeberg.org/scientress/netbox-c3nav/issues) page. When reporting bugs, please include:
 
 - NetBox version
 - Plugin version
@@ -156,11 +156,11 @@ Please report bugs by opening an issue on our [GitHub Issues](https://codeberg.o
 
 ### Feature Requests
 
-Feature requests can be submitted as [GitHub Issues](https://codeberg.org/scientress/netbox-c3nav/issues) with the "enhancement" label.
+Feature requests can be submitted as [Codeberg Issues](https://codeberg.org/scientress/netbox-c3nav/issues) with the "enhancement" label.
 
 ## Support
 
-- **Documentation**: https://scientress.github.io/netbox-c3nav/
+- **Documentation**: WIP
 - **Issues**: https://codeberg.org/scientress/netbox-c3nav/issues
 - **Discussions**: https://codeberg.org/scientress/netbox-c3nav/discussions
 - **NetBox Community Slack**: [netdev-community.slack.com](https://netdev.chat/)
