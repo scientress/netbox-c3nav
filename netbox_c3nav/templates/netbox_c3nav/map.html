@@ -9,8 +9,11 @@
 
 {% block head %}
     <link rel="stylesheet" href="{% static 'netbox_c3nav/vendor/leaflet/leaflet.css' %}" />
-    <link rel="stylesheet" href="{% static 'netbox_c3nav/map.css' %}" />
+    {% if settings.DEVELOPER %}
     <link rel="stylesheet" href="http://localhost:5173/src/map.scss" />
+    {% else %}
+    <link rel="stylesheet" href="{% static 'netbox_c3nav/vite/map.css' %}" />
+    {% endif %}
 {#    <script src="{% static 'netbox_c3nav/vendor/leaflet/leaflet.js' %}"></script>#}
 {% endblock %}
 
@@ -64,10 +67,9 @@
 {% endblock %}
 
 {% block javascript %}
-    <script src="{% static 'netbox_c3nav/map.js' %}"></script>
-    {% if settings.DEBUG %}
+    {% if settings.DEVELOPER %}
     <script type="module" src="http://localhost:5173/src/map.ts"></script>
     {% else %}
-    <script type="module" src="{% static 'netbox_c3nav/vite/map.iife.js' %}"></script>
+    <script type="module" src="{% static 'netbox_c3nav/vite/map.js' %}"></script>
     {% endif %}
 {% endblock %}
