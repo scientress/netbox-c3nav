@@ -73,9 +73,10 @@ No additional Python packages are required beyond NetBox's core dependencies.
 
 ## REST API
 
-This plugin provides a REST API endpoint for managing netbox_c3nav resources:
+This plugin provides REST API endpoints for managing device positions and overlays:
 
-- `/api/plugins/netbox_c3nav/netbox-c3navs/` - List and create Netbox_C3Nav objects
+- `/api/plugins/c3nav/positions/` - List, create and update device positions 
+- `/api/plugins/c3nav/overlays/` - List, create and update map overlays
 
 
 
