@@ -37,6 +37,14 @@ map.bind(document.getElementById('map') as HTMLDivElement).then(async () => {
       })
     }
   })
+
+  map.addEventListener('levelchange', (event) => {
+    if (unlockMarkersButton.classList.contains('active')) {
+      markers.forEach(marker => {
+        marker.unlock()
+      })
+    }
+  })
 })
 
 // @ts-ignore
