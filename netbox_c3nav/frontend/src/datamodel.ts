@@ -10,6 +10,7 @@ export class DeviceMarker {
   position: C3navPosition | null = null
   leafletMarker: L.Marker | null = null
   device: DCIM.DeviceBrief | DCIM.Device | null = null
+  unlocked: boolean = false
 
   constructor(idOrDevicePosition?: number | C3navPosition) {
     if (typeof idOrDevicePosition === "number") {
@@ -32,7 +33,7 @@ export class DeviceMarker {
       }
     } else {
       this.position.x = pos.lng;
-      this.position.y = pos.lng;
+      this.position.y = pos.lat;
       this.position.level_id = (typeof level === 'number') ? level : level.id
       this.position.level_index = (typeof level === 'number') ? undefined : level.level_index
     }
@@ -48,6 +49,12 @@ export class DeviceMarker {
     if (this.leafletMarker) {
       this.leafletMarker.setLatLng(L.GeoJSON.coordsToLatLng([this.position.x, this.position.y]))
     }
+  }
+
+  updatePositionFromMarker() {
+    const latlng = this.leafletMarker.getLatLng()
+    this.position.x = latlng.lng;
+    this.position.y = latlng.lat;
   }
 
   setDeviceFromDOM(element: HTMLElement) {
@@ -90,6 +97,15 @@ export class DeviceMarker {
     }
     this.leafletMarker.bindPopup(popupBody)
 
+    this.leafletMarker.on('dragend', e => {
+      if (!this.unlocked) {
+        console.warn('marker dragged but not unlocked??? - ignoring')
+        return
+      }
+      this.updatePositionFromMarker()
+      this.save()
+    })
+
   }
 
   public attach(overlay: L.LayerGroup) {
@@ -113,21 +129,42 @@ export class DeviceMarker {
         this.id = response.id
         this.setDevicePosition(response)
       })
+    } else {
+      netBoxApi.patch(`plugins/c3nav/positions/${this.id}/`, {
+        x: this.position.x,
+        y: this.position.y,
+      }).then((response: C3navPosition) => {
+        console.log(`marker with id:${response.id} updated`, response)
+        this.setDevicePosition(response)
+      })
     }
+  }
+
+  public unlock() {
+    this.unlocked = true
+    this.leafletMarker.dragging?.enable()
+  }
+
+  public lock() {
+    this.unlocked = false
+    this.leafletMarker.dragging?.disable()
   }
 }
 
 
-export async function loadMarkers(map: Map, next?: string) {
-  await netBoxApi.get(next || 'plugins/c3nav/positions').then((r: ListResponse<C3navPosition>)  => {
+export async function loadMarkers(map: Map) {
+  const markers: DeviceMarker[] = []
+  let r: ListResponse<C3navPosition> = null
+  do {
+    r = await netBoxApi.get(r?.next || 'plugins/c3nav/positions') as ListResponse<C3navPosition>
     for (const dp of r.results) {
       const savedMarker = new DeviceMarker(dp)
       savedMarker.attach(map.markerLayers[dp.level_id])
+      markers.push(savedMarker)
     }
-    if (r.next) {
-      loadMarkers(map, r.next)
-    }
-  })
+  } while (r.next)
+  console.log('fetched markers', markers)
+  return markers
 }
 
 

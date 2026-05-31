@@ -35,6 +35,9 @@
         </a>
       {% endif %}
       {% if edit %}
+        <button id="unlockMarkers" type="button" class="btn btn-yellow" title="Make markers moveable">
+          <i class="mdi mdi-map-marker-right" aria-hidden="true"></i> Unlock Markers
+        </button>
         <a href="{% url 'plugins:netbox_c3nav:map' %}" class="btn btn-primary" role="button">
           <i class="mdi mdi-map-search" aria-hidden="true"></i> View
         </a>

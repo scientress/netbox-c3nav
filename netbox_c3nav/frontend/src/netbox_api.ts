@@ -86,6 +86,10 @@ export class NetBoxApi {
   put(path: string, data : object | any[]): Promise<Object|[any[]]|string|number> {
     return this.req('PUT', path, data).then(r => r.json());
   }
+
+  patch(path: string, data : object | any[]): Promise<Object|[any[]]|string|number> {
+    return this.req('PATCH', path, data).then(r => r.json());
+  }
 }
 
 export const netBoxApi: NetBoxApi = new NetBoxApi(`${window.location.origin}/api/`)

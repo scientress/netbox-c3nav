@@ -16,7 +16,26 @@ map.bind(document.getElementById('map') as HTMLDivElement).then(async () => {
   console.log('loading overlays')
   await loadOverlays(map)
   console.log('loading markers')
-  await loadMarkers(map);
+  const markers: DeviceMarker[] = await loadMarkers(map);
+
+  const unlockMarkersButton = document.getElementById('unlockMarkers');
+  unlockMarkersButton.addEventListener('click', (event) => {
+    if (unlockMarkersButton.classList.contains('active')) {
+      unlockMarkersButton.classList.remove('active')
+      unlockMarkersButton.innerHTML = unlockMarkersButton.innerHTML.replace('Lock', 'Unlock');
+      unlockMarkersButton.title = 'Make markers moveable'
+      markers.forEach(marker => {
+        marker.lock()
+      })
+    } else {
+      unlockMarkersButton.classList.add('active')
+      unlockMarkersButton.innerHTML = unlockMarkersButton.innerHTML.replace('Unlock', 'Lock');
+      unlockMarkersButton.title = 'Fix markers is position'
+      markers.forEach(marker => {
+        marker.unlock()
+      })
+    }
+  })
 })
 
 // @ts-ignore
