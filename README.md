@@ -1,6 +1,6 @@
-# NetBox c3nav floor plans
+# NetBox c3nav Floor Plans
 
-NetBox plugin for placing devices on a c3nav map
+NetBox plugin for placing devices on a c3nav map.
 
 
 * Free software: Apache-2.0
