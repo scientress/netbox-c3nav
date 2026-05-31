@@ -5,7 +5,7 @@
 {% load perms %}
 {% load helpers %}
 
-{% block title %}Map{% endblock %}
+{% block title %}Map{% if edit %} - Edit Device Positions{% endif %}{% endblock %}
 
 {% block head %}
     <link rel="stylesheet" href="{% static 'netbox_c3nav/vendor/leaflet/leaflet.css' %}" />
@@ -14,12 +14,40 @@
 {#    <script src="{% static 'netbox_c3nav/vendor/leaflet/leaflet.js' %}"></script>#}
 {% endblock %}
 
+{% block controls %}
+  <div class="btn-list justify-content-end mb-2">
+    {# Add/edit/delete/etc. buttons #}
+    {% block control-buttons %}
+
+      {# Extra buttons #}
+      {% block extra_controls %}{% endblock %}
+
+      {# Default buttons #}
+      {% if perms.extras.add_bookmark and object.bookmarks %}
+        {% bookmark_button object %}
+      {% endif %}
+      {% if not edit and perms.netbox_c3nav.add_deviceposition %}
+        <a href="{% url 'plugins:netbox_c3nav:map_edit' %}" class="btn btn-yellow" role="button">
+          <i class="mdi mdi-pencil" aria-hidden="true"></i> Edit
+        </a>
+      {% endif %}
+      {% if edit %}
+        <a href="{% url 'plugins:netbox_c3nav:map' %}" class="btn btn-primary" role="button">
+          <i class="mdi mdi-map-search" aria-hidden="true"></i> View
+        </a>
+      {% endif %}
+    {% endblock control-buttons %}
+  </div>
+{% endblock controls %}
+
 {% block content %}
+    {{ block.super }}
     {# we need the csrf token in the JS to make POST/PUT/PATCH API requests #}
     <input type="hidden" id="csrf_token" value="{{ csrf_token }}">
 
     {% with config=settings.PLUGINS_CONFIG.netbox_c3nav %}
         <div id="map" class="c3nav c3nav-map" data-settings="{{ config | json }}"></div>
+        {% if edit %}
         <div class="map-item-list">
             <h2>Un-Positioned Items</h2>
             <ul class="list-group map-unpositioned-items">
@@ -31,6 +59,7 @@
                 {% endfor %}
             </ul>
         </div>
+        {% endif %}
     {% endwith %}
 {% endblock %}
 

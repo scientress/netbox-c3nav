@@ -7,6 +7,7 @@ from . import models, views
 urlpatterns = (
     path("", RedirectView.as_view(url="map/", permanent=False)),
     path("map/", views.MapView.as_view(), name="map"),
+    path("map/edit", views.MapView.as_view(edit=True), name="map_edit"),
     path("overlays/", views.OverlayListView.as_view(), name="overlay_list"),
     path("overlays/add/", views.OverlayEditView.as_view(), name="overlay_add"),
     path("overlays/<int:pk>/", views.OverlayDetailView.as_view(), name="overlay"),
