@@ -1,8 +1,9 @@
 from dcim.models import Device
-from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.shortcuts import render
+from django.urls import reverse
 from django.views import View
+from netbox.plugins import get_plugin_config
 from netbox.views import generic
 
 from . import filtersets, forms, models, tables
@@ -24,10 +25,22 @@ class MapView(PermissionRequiredMixin, View):
                                     restrict(request.user, 'view'))
         else:
             unpositioned_devices = []
+
+        api_key = get_plugin_config('netbox_c3nav', 'api_key')
+        frontend_api_key = get_plugin_config('netbox_c3nav', 'frontend_api_key', None)
+        tileserver_url = get_plugin_config('netbox_c3nav', 'tileserver_url', None),
+        if get_plugin_config('netbox_c3nav', 'proxy_tiles', False):
+            tileserver_url = reverse('plugins-api:netbox_c3nav-api:api-root') + 'tiles/'
+
         return render(
             request,
             'netbox_c3nav/map.html',
             context={
+                'frontend_settings': {
+                    'c3nav_url': get_plugin_config('netbox_c3nav', 'c3nav_url'),
+                    'tileserver_url': tileserver_url,
+                    'api_key': frontend_api_key if frontend_api_key is not None else api_key,
+                },
                 'edit': self.edit,
                 'unpositioned_items': unpositioned_devices,
             }

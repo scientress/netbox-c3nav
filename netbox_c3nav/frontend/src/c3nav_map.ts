@@ -5,12 +5,11 @@ import {C3navApiTypes} from "./c3nav_types";
 import {LevelControl, OverlayControl} from "./c3nav_controls"
 
 
-//(settings.c3nav_tileserver_url || `${settings.c3nav_url}/map`) + `/${id}/{z}/{x}/{y}/0.webp`;
-
 export class Map {
   instanceUrl: string
   api: C3NavApi
   apiKey: string | undefined
+  tileserverUrl: string | undefined
   map: LeafletMap
   container: HTMLDivElement
 
@@ -26,9 +25,10 @@ export class Map {
   overlayLayers: {[levelId: string]: L.LayerGroup}
 
 
-  constructor(instanceUrl: string, apiKey?: string) {
+  constructor(instanceUrl: string, apiKey?: string, tileserverUrl?: string) {
     this.instanceUrl = instanceUrl
     this.apiKey = apiKey
+    this.tileserverUrl = tileserverUrl
     this.api = new C3NavApi(`${instanceUrl}/api/v2/`, apiKey)
 
     this.overlayGroups = {}
@@ -62,8 +62,11 @@ export class Map {
     });
     this.map.fitBounds(GeoJSON.coordsToLatLngs(this.map_settings.initial_bounds))
 
+    if (!this.tileserverUrl) {
+      this.tileserverUrl = (this.map_settings.tile_server || `${this.instanceUrl}/map`)
+    }
     this.levelControl = new LevelControl({
-      baseUrl: (this.map_settings.tile_server || `${this.instanceUrl}/map`)
+      baseUrl: this.tileserverUrl.replace(/\/$/, ''),
     })
     this.levelControl.addTo(this.map)
     this.overlayControl = new OverlayControl(this.levelControl, {})

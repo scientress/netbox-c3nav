@@ -15,9 +15,10 @@ class NetBoxC3navConfig(PluginConfig):
     ]
     default_settings = {
         'c3nav_url': None,
-        'c3nav_use_tileserver': False,
-        'c3nav_tileserver_url': None,
-        'c3nav_api_key': 'anonymous',
+        'tileserver_url': None,
+        'api_key': 'anonymous',
+        'frontend_api_key': None,
+        'proxy_tiles': False,
     }
 
 config = NetBoxC3navConfig

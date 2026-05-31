@@ -119,9 +119,16 @@ Other configuration options:
 ```python
 PLUGINS_CONFIG = {
     'netbox_c3nav': {
-        'c3nav_url': 'https://your.c3nav.instance',  # c3nav instance base url
-        'c3nav_tileserver_url': 'https://tiles.your.c3nav.instance',  # override the tile url returned by the api, can be left empty in almost every case
-        'c3nav_api_key': 'secret:something',  # can be used to access non-public data
+        # c3nav instance base url
+        'c3nav_url': 'https://your.c3nav.instance',
+        # override the tile url returned by the api, can be left empty in almost every case
+        'tileserver_url': 'https://tiles.your.c3nav.instance',
+        # can be used to access non-public data
+        'api_key': 'secret:something',
+        # can be used to override the api-key used by the fronted, i.e. use a 2nd api key for the frontend
+        'frontend_api_key': 'secret:something',
+        # proxy tiles server side and insert the tile_access_token which is fetched every 30sec with the api_token
+        'proxy_tiles': False,
     }
 }
 ```

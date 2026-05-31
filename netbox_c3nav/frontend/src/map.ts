@@ -4,14 +4,13 @@ import {Map} from "./c3nav_map";
 import {MapCursor} from "./dnd-plugins";
 import {DragDropMarker} from "./dnd-utils";
 import {DeviceMarker, loadMarkers, loadOverlays} from "./datamodel";
-import {ListResponse, netBoxApi} from "./netbox_api";
-import {C3navPosition} from "./netbox_c3nav_types";
+import {netBoxApi} from "./netbox_api";
 
 // @ts-ignore
 window.netBoxApi = netBoxApi
 
 const netbox_c3nav_settings = JSON.parse(document.getElementById('map').dataset.settings);
-const map = new Map(netbox_c3nav_settings.c3nav_url, netbox_c3nav_settings.c3nav_api_key)
+const map = new Map(netbox_c3nav_settings.c3nav_url, netbox_c3nav_settings.api_key, netbox_c3nav_settings.tileserver_url)
 const unlockMarkersButton = document.getElementById('unlockMarkers');
 const markers: DeviceMarker[] = []
 map.bind(document.getElementById('map') as HTMLDivElement).then(async () => {

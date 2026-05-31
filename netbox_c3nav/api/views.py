@@ -1,9 +1,16 @@
+import requests
+from django.http import HttpResponse
+from drf_spectacular.utils import extend_schema
 from netbox.api.viewsets import NetBoxModelViewSet
 from rest_framework.decorators import action
+from rest_framework.permissions import BasePermission
+from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from .. import filtersets, models
 from .serializers import DevicePositionSerializer, OverlaySerializer
+from ..c3nav import build_tile_url, get_tile_access_token
 
 
 class DevicePositionViewSet(NetBoxModelViewSet):
@@ -23,3 +30,34 @@ class DevicePositionViewSet(NetBoxModelViewSet):
 class OverlayViewSet(NetBoxModelViewSet):
     queryset = models.Overlay.objects.prefetch_related('tags')
     serializer_class = OverlaySerializer
+
+
+class TileProxyPermission(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('netbox_c3nav.view_deviceposition')
+
+
+@extend_schema(exclude=True)
+class TileProxyView(APIView):
+    _ignore_model_permissions = True
+    schema = None
+    permission_classes = (TileProxyPermission,)
+
+    def get_view_name(self):
+        return "TileProxy"
+
+    def get(self, request: Request, level: int, zoom: int, x: int, y: int, theme:int, ext:str, format=None, **kwargs):
+        r = requests.get(
+            build_tile_url(level, zoom, x, y, theme, ext),
+            headers={
+                'If-None-Match': request.headers.get('If-None-Match', None),
+                'User-Agent': 'netbox_c3nav',
+            },
+            cookies={
+                'c3nav_tile_access': get_tile_access_token()
+            }
+        )
+        return HttpResponse(r.content, status=r.status_code, headers={
+            **r.headers,
+            'X-Proxied-By': 'netbox_c3nav',
+        })

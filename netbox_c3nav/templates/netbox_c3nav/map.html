@@ -52,7 +52,7 @@
     <input type="hidden" id="csrf_token" value="{{ csrf_token }}">
 
     {% with config=settings.PLUGINS_CONFIG.netbox_c3nav %}
-        <div id="map" class="c3nav c3nav-map" data-settings="{{ config | json }}"></div>
+        <div id="map" class="c3nav c3nav-map" data-settings="{{ frontend_settings | json }}"></div>
         {% if edit %}
         <div class="map-item-list">
             <h2>Un-Positioned Items</h2>
