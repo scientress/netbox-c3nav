@@ -3,7 +3,7 @@ import {pointerIntersection} from '@dnd-kit/collision';
 import {Map} from "./c3nav_map";
 import {MapCursor} from "./dnd-plugins";
 import {DragDropMarker} from "./dnd-utils";
-import {DeviceMarker, loadMarkers} from "./datamodel";
+import {DeviceMarker, loadMarkers, loadOverlays} from "./datamodel";
 import {ListResponse, netBoxApi} from "./netbox_api";
 import {C3navPosition} from "./netbox_c3nav_types";
 
@@ -12,8 +12,11 @@ window.netBoxApi = netBoxApi
 
 const netbox_c3nav_settings = JSON.parse(document.getElementById('map').dataset.settings);
 const map = new Map(netbox_c3nav_settings.c3nav_url, netbox_c3nav_settings.c3nav_api_key)
-map.bind(document.getElementById('map') as HTMLDivElement).then(() => {
-  loadMarkers(map);
+map.bind(document.getElementById('map') as HTMLDivElement).then(async () => {
+  console.log('loading overlays')
+  await loadOverlays(map)
+  console.log('loading markers')
+  await loadMarkers(map);
 })
 
 // @ts-ignore

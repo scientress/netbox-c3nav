@@ -64,7 +64,7 @@ class Overlay(NetBoxModel):
     right = models.DecimalField(_('right coordinate'), max_digits=6, decimal_places=2)
 
     class Meta:
-        ordering = ('name',)
+        ordering = ('level_index', 'name')
         verbose_name = _('Overlay')
         verbose_name_plural = _('Overlays')
         constraints = [

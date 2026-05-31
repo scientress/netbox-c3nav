@@ -35,11 +35,3 @@ div.map-item-list > ul {
     /* because css is garbage this is the only way to prevent this div from growing */
     height: 60vh;
 }
-
-.leaflet-control-levels.leaflet-control {
-
-}
-
-.leaflet-control-levels.leaflet-control .current {
-    font-weight: bold;
-}

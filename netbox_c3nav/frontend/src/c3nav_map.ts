@@ -2,7 +2,7 @@ import {Map as LeafletMap, map as leafletmap, CRS, LatLngBounds, GeoJSON, LatLng
 import * as L from 'leaflet'
 import {C3NavApi} from "./c3nav-api";
 import {C3navApiTypes} from "./c3nav_types";
-import {LevelControl} from "./c3nav_controls"
+import {LevelControl, OverlayControl} from "./c3nav_controls"
 
 
 //(settings.c3nav_tileserver_url || `${settings.c3nav_url}/map`) + `/${id}/{z}/{x}/{y}/0.webp`;
@@ -20,6 +20,7 @@ export class Map {
   levelsById: {[id: number]: C3navApiTypes.LevelSchema}
 
   levelControl: LevelControl
+  overlayControl: OverlayControl
   overlayGroups: {[levelId: string]: L.LayerGroup}
   markerLayers: {[levelId: string]: L.LayerGroup}
   overlayLayers: {[levelId: string]: L.LayerGroup}
@@ -65,6 +66,8 @@ export class Map {
       baseUrl: (this.map_settings.tile_server || `${this.instanceUrl}/map`)
     })
     this.levelControl.addTo(this.map)
+
+    this.overlayControl = new OverlayControl({})
 
     this.levels = await this.api.get('mapdata/levels') as C3navApiTypes.LevelSchema[]
     this.levels.sort((a, b) => b.base_altitude - a.base_altitude)

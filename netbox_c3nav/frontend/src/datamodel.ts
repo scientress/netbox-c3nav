@@ -1,4 +1,4 @@
-import {C3navPosition} from "./netbox_c3nav_types";
+import {C3navOverlayBrief, C3navPosition} from "./netbox_c3nav_types";
 import * as L from "leaflet";
 import {DCIM} from "./netbox_types";
 import {C3navApiTypes} from "./c3nav_types";
@@ -118,14 +118,58 @@ export class DeviceMarker {
 }
 
 
-export function loadMarkers(map: Map, next?: string) {
-  netBoxApi.get(next || 'plugins/c3nav/positions').then((r: ListResponse)  => {
-    for (const dp of r.results as C3navPosition[]) {
+export async function loadMarkers(map: Map, next?: string) {
+  await netBoxApi.get(next || 'plugins/c3nav/positions').then((r: ListResponse<C3navPosition>)  => {
+    for (const dp of r.results) {
       const savedMarker = new DeviceMarker(dp)
       savedMarker.attach(map.markerLayers[dp.level_id])
     }
     if (r.next) {
       loadMarkers(map, r.next)
     }
+  })
+}
+
+
+export async function fetchOverlays() {
+  const overlays: C3navOverlayBrief[] = []
+  let r: ListResponse<C3navOverlayBrief> = null
+  do {
+    r = await netBoxApi.get(r?.next || 'plugins/c3nav/overlays?brief=true') as ListResponse<C3navOverlayBrief>
+    overlays.push(...r.results)
+  } while (r.next)
+  console.log('fetched overlays', overlays)
+  return overlays
+}
+
+export async function loadOverlays(map: Map) {
+  fetchOverlays().then(async overlays =>
+    Object.groupBy(overlays, o => o.level_index ? `Level ${o.level_index}` : 'Global')
+  ).then(groupedOverlays => {
+    console.log('groupedOverlays', groupedOverlays)
+    for (const groupName in groupedOverlays) {
+      groupedOverlays[groupName].forEach((overlayObject: C3navOverlayBrief) => {
+        console.log(`groupName: ${groupName} - source: ${overlayObject.name}`)
+        const bounds = L.GeoJSON.coordsToLatLngs(overlayObject.bounds)
+        const options = {
+          opacity: 0.3,
+          zIndex: 10,
+        }
+        let layer = null
+        if (overlayObject.external_url && overlayObject.external_url.includes('{x}')) {
+          // overlay is external and a XYZ Layer
+          layer = new L.TileLayer(overlayObject.external_url, options)
+        } else if (overlayObject.external_url) {
+          layer = new L.ImageOverlay(overlayObject.external_url, bounds, options)
+        } else if (overlayObject.file) {
+          layer = new L.ImageOverlay(overlayObject.file, bounds, options)
+        } else {
+          console.error('overlay is invalid', overlayObject)
+          return
+        }
+        map.overlayControl.addOverlay(layer, overlayObject.name, groupName)
+      })
+    }
+    map.overlayControl.addTo(map.map)
   })
 }

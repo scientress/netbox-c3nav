@@ -90,9 +90,9 @@ export class NetBoxApi {
 
 export const netBoxApi: NetBoxApi = new NetBoxApi(`${window.location.origin}/api/`)
 
-export interface ListResponse {
+export interface ListResponse<Model = Object> {
   count: number
   next: string | null
   previous: string | null
-  results: any[]
+  results: Model[]
 }
