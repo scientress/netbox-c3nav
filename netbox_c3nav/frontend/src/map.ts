@@ -12,13 +12,14 @@ window.netBoxApi = netBoxApi
 
 const netbox_c3nav_settings = JSON.parse(document.getElementById('map').dataset.settings);
 const map = new Map(netbox_c3nav_settings.c3nav_url, netbox_c3nav_settings.c3nav_api_key)
+const unlockMarkersButton = document.getElementById('unlockMarkers');
+const markers: DeviceMarker[] = []
 map.bind(document.getElementById('map') as HTMLDivElement).then(async () => {
   console.log('loading overlays')
   await loadOverlays(map)
   console.log('loading markers')
-  const markers: DeviceMarker[] = await loadMarkers(map);
 
-  const unlockMarkersButton = document.getElementById('unlockMarkers');
+  markers.push(...await loadMarkers(map));
   unlockMarkersButton.addEventListener('click', (event) => {
     if (unlockMarkersButton.classList.contains('active')) {
       unlockMarkersButton.classList.remove('active')
@@ -101,6 +102,10 @@ manager.monitor.addEventListener('dragend', (event) => {
     marker.setPosition(mapPos, map.getCurrentLevel())
     marker.attach(map.getCurrentMarkerLayer())
     marker.save()
+    markers.push(marker)
+    if (unlockMarkersButton.classList.contains('active')) {
+      marker.unlock()
+    }
     source.element.remove()
     console.log('added marker', marker)
     console.log(
