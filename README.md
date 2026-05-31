@@ -18,6 +18,7 @@ NetBox plugin for placing devices on a c3nav map.
 - Navigate to a device's position in c3nav from the device detail view
 - REST API endpoints for programmatic access
 - Integration with NetBox's permission system
+- Proxying of c3nav tiles with insertion of the tile_access_token
 
 ### In Development
 
@@ -65,7 +66,7 @@ For more detailed compatibility information, see [COMPATIBILITY.md](COMPATIBILIT
 ## Dependencies
 
 This plugin requires:
-- NetBox 0.1.0 or later (NetBox 4.4+)
+- NetBox 4.4.0 or later (NetBox 4.4+)
 - Python 3.13 or later
 
 No additional Python packages are required beyond NetBox's core dependencies.

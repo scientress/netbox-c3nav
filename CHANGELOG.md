@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - WIP
+
+### Release Summary
+TBD
+
+### Added
+- Proxying of c3nav tiles with insertion of the tile_access_token
+- Support for a separate c3nav api key for the frontend
+
+### Fixed
+- Navigation items now have the correct permissions set and only show the actions the user is authorized to do
+- Graceful handling of the user having no access to the overlays
+
+### Changed
+- Configuration keys have changed see adf23ed1ebfec8608c44c0b9b3c283488a2aef74 for details
+
+### Deprecated
+- N/A
+
+### Removed
+- N/A
+
+### Security
+- N/A
+
+
 ## [0.1.0] - 2026-05-31
 
 ### Release Summary
