@@ -1,4 +1,4 @@
-import {C3navOverlayBrief, C3navPosition} from "./netbox_c3nav_types";
+import {C3navOverlayBrief, C3navPosition, ErrorResponse} from "./netbox_c3nav_types";
 import * as L from "leaflet";
 import {DCIM} from "./netbox_types";
 import {C3navApiTypes} from "./c3nav_types";
@@ -124,18 +124,30 @@ export class DeviceMarker {
         level_id: this.position.level_id,
         level_index: this.position.level_index,
         device: this.device.id
-      }).then((response: C3navPosition) => {
-        console.log(`marker saved, id:${response.id}`)
-        this.id = response.id
-        this.setDevicePosition(response)
+      }).then((response: C3navPosition|ErrorResponse) => {
+        if ('id' in response) {
+          console.log(`marker saved, id:${response.id}`)
+          this.id = response.id
+          this.setDevicePosition(response as C3navPosition)
+        } else {
+          // probably an error then
+          console.error('error saving marker', response)
+          alert((response as ErrorResponse).detail)
+        }
       })
     } else {
       netBoxApi.patch(`plugins/c3nav/positions/${this.id}/`, {
         x: this.position.x,
         y: this.position.y,
-      }).then((response: C3navPosition) => {
-        console.log(`marker with id:${response.id} updated`, response)
-        this.setDevicePosition(response)
+      }).then((response: C3navPosition|ErrorResponse) => {
+        if ('id' in response) {
+          console.log(`marker with id:${response.id} updated`, response)
+          this.setDevicePosition(response)
+        } else {
+          // probably an error then
+          console.error('error updating marker position', response)
+          alert((response as ErrorResponse).detail)
+        }
       })
     }
   }
@@ -173,6 +185,7 @@ export async function fetchOverlays() {
   let r: ListResponse<C3navOverlayBrief> = null
   do {
     r = await netBoxApi.get(r?.next || 'plugins/c3nav/overlays?brief=true') as ListResponse<C3navOverlayBrief>
+    if (!('results' in r)) break
     overlays.push(...r.results)
   } while (r.next)
   console.log('fetched overlays', overlays)
@@ -180,15 +193,16 @@ export async function fetchOverlays() {
 }
 
 export async function loadOverlays(map: Map) {
-  fetchOverlays().then(async overlays =>
-    Object.groupBy(overlays, o => o.level_index ? `Level ${o.level_index}` : 'Global')
-  ).then(groupedOverlays => {
-    console.log('groupedOverlays', groupedOverlays)
-    for (const groupName in groupedOverlays) {
-      groupedOverlays[groupName].forEach((overlay: C3navOverlayBrief) => {
-        map.overlayControl.addOverlay(overlay, groupName)
-      })
-    }
-    map.overlayControl.addTo(map.map)
-  })
+  const overlays: C3navOverlayBrief[] = await fetchOverlays()
+  if (overlays.length === 0) {
+    console.log('No overlays, not adding overlay control to map')
+    return
+  }
+  const groupedOverlays= Object.groupBy(overlays, o => o.level_index ? `Level ${o.level_index}` : 'Global')
+  for (const groupName in groupedOverlays) {
+    groupedOverlays[groupName].forEach((overlay: C3navOverlayBrief) => {
+      map.overlayControl.addOverlay(overlay, groupName)
+    })
+  }
+  map.overlayControl.addTo(map.map)
 }

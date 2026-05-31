@@ -16,7 +16,7 @@ class MapView(PermissionRequiredMixin, View):
     def get_permission_required(self):
         perms = super().get_permission_required()
         if self.edit:
-            perms = (*perms, 'netbox_c3nav.edit_deviceposition')
+            perms = (*perms, 'netbox_c3nav.change_deviceposition')
         return perms
 
     def get(self, request):

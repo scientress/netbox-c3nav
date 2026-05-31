@@ -1,5 +1,9 @@
 import {DCIM} from "./netbox_types";
 
+export interface ErrorResponse {
+  detail: string,
+}
+
 export interface C3navPosition {
   id?: number;
   url?: string;

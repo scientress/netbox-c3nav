@@ -18,11 +18,13 @@ menu = PluginMenu(
             PluginMenuItem(
                 link='plugins:netbox_c3nav:map',
                 link_text='Map',
+                permissions=('netbox_c3nav.view_deviceposition',),
                 buttons=[
                     PluginMenuButton(
                         link='plugins:netbox_c3nav:map_edit',
                         title='Edit Device Positions',
                         icon_class='mdi mdi-pencil',
+                        permissions=('netbox_c3nav.add_deviceposition', 'netbox_c3nav.change_deviceposition'),
                     )
                 ]
             ),
@@ -35,11 +37,13 @@ menu = PluginMenu(
             PluginMenuItem(
                 link='plugins:netbox_c3nav:overlay_list',
                 link_text='Overlays',
+                permissions=('netbox_c3nav.view_overlay',),
                 buttons=[
                     PluginMenuButton(
                         link='plugins:netbox_c3nav:overlay_add',
                         title='Add',
                         icon_class='mdi mdi-plus-thick',
+                        permissions=('netbox_c3nav.add_overlay', 'netbox_c3nav.change_overlay'),
                     )
                 ]
             ),
