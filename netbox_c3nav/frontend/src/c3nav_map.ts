@@ -76,7 +76,7 @@ export class Map {
     for (const l of this.levels) {
       this.levelsById[l.id] = l
       if (l.on_top_of !== null) continue
-      this.overlayGroups[l.id] = this.levelControl.addLevel(l.id, l.short_label)
+      this.overlayGroups[l.id] = this.levelControl.addLevel(l)
       this.markerLayers[l.id] = L.layerGroup().addTo(this.overlayGroups[l.id])
       this.overlayLayers[l.id] = L.layerGroup().addTo(this.overlayGroups[l.id])
     }
@@ -85,18 +85,22 @@ export class Map {
   }
 
   public getCurrentLevel(): C3navApiTypes.LevelSchema {
-    return this.levelsById[this.levelControl.getLevel()]
+    return this.levelsById[this.levelControl.getCurrentLevelId()]
   }
 
   public getCurrentOverlayGroup(): LayerGroup {
-    return this.overlayGroups[this.levelControl.getLevel()]
+    return this.overlayGroups[this.levelControl.getCurrentLevelId()]
   }
 
   public getCurrentMarkerLayer(): LayerGroup {
-    return this.markerLayers[this.levelControl.getLevel()]
+    return this.markerLayers[this.levelControl.getCurrentLevelId()]
   }
 
   public getCurrentOverlayLayer(): LayerGroup {
-    return this.overlayLayers[this.levelControl.getLevel()]
+    return this.overlayLayers[this.levelControl.getCurrentLevelId()]
+  }
+
+  public addEventListener(event: string, handler: (event: Event) => void) {
+    this.container.addEventListener(event, handler)
   }
 }

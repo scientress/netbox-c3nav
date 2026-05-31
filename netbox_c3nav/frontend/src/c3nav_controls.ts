@@ -1,5 +1,6 @@
 import * as L from "leaflet"
 import {C3navOverlayBrief} from "./netbox_c3nav_types";
+import {C3navApiTypes} from "./c3nav_types";
 
 export interface LevelControlOptions extends L.ControlOptions {
   baseUrl: string
@@ -7,8 +8,22 @@ export interface LevelControlOptions extends L.ControlOptions {
   initialTheme?: number
 }
 
+export interface LevelObject {
+  tileLayer: L.TileLayer
+  overlayLayer: L.LayerGroup
+  levelButton: HTMLAnchorElement
+}
+
+export type CombinedLevelObject = C3navApiTypes.LevelSchema & LevelObject
+
+export interface LevelChangeEventDict {
+  levelId: string
+  level: CombinedLevelObject
+}
+
 export class LevelControl extends L.Control {
   private _container: HTMLElement
+  private levels: {[key: string]: CombinedLevelObject}
   private _tileLayers: {[key: string]: L.TileLayer}
   private _overlayLayers: {[key: string]: L.LayerGroup}
   private _levelButtons: {[key: string]: HTMLAnchorElement}
@@ -37,6 +52,7 @@ export class LevelControl extends L.Control {
     this._tileLayers = {}
     this._overlayLayers = {}
     this._levelButtons = {}
+    this.levels = {}
     this.currentLevel = null
     // this.currentTheme = this.options.initialTheme
     return this._container
@@ -51,22 +67,31 @@ export class LevelControl extends L.Control {
       })
   }
     
-  addLevel(id: number|string, title: string): L.LayerGroup {
-    id = String(id)
-    this._tileLayers[id] = this.createTileLayer(id)
+  addLevel(level: C3navApiTypes.LevelSchema): L.LayerGroup {
+    const levelId = level.id.toString()
+    const tileLayer = this.createTileLayer(levelId)
+    this._tileLayers[levelId] = tileLayer
     const overlay = L.layerGroup()
-    this._overlayLayers[id] = overlay
+    this._overlayLayers[levelId] = overlay
 
     const link = L.DomUtil.create('a', '', this._container)
-    link.innerHTML = title
-    link.dataset.level = id
+    link.innerHTML = level.short_label
+    link.dataset.level = levelId
+    link.dataset.level_index = level.level_index
     link.href = '#'
+    this._levelButtons[levelId] = link
 
     L.DomEvent
         .on(link, 'mousedown dblclick', L.DomEvent.stopPropagation)
         .on(link, 'click', this._levelClick, this)
 
-    this._levelButtons[id] = link
+    const levelObject: LevelObject = {
+      tileLayer: tileLayer,
+      overlayLayer: overlay,
+      levelButton: link,
+    }
+    this.levels[levelId] = Object.assign(levelObject, level) as CombinedLevelObject
+
     return overlay
   }
     
@@ -86,20 +111,36 @@ export class LevelControl extends L.Control {
         L.DomUtil.addClass(this._levelButtons[id], 'current')
     }
     this.currentLevel = id
+    this._container.dispatchEvent(new CustomEvent<LevelChangeEventDict>('levelchange', {
+      bubbles: true,
+      detail: {
+        levelId: id,
+        level: this.levels[id]
+      }
+    }))
     return true
   }
 
-  getLevel(): string {
+  getCurrentLevelId(): string {
     return this.currentLevel
   }
 
+  getCurrentLevel(): CombinedLevelObject {
+    return this.levels[this.currentLevel]
+  }
+
+  getLevels(): {[key: string]: CombinedLevelObject} {
+    return this.levels
+  }
+
   _levelClick(e: MouseEvent): void {
-      e.preventDefault()
-      e.stopPropagation()
-      this.setLevel((e.target as HTMLElement).dataset.level)
-      // c3nav.update_map_state()
-      // c3nav.update_location_labels()
-      // c3nav._update_loadinfo_labels()
+    e.preventDefault()
+    e.stopPropagation()
+    this.setLevel((e.target as HTMLElement).dataset.level)
+
+    // c3nav.update_map_state()
+    // c3nav.update_location_labels()
+    // c3nav._update_loadinfo_labels()
   }
 
   finalize(): void {
@@ -118,6 +159,10 @@ export class LevelControl extends L.Control {
       window.setTimeout(function () {
           old_tile_layer.remove()
       }, 2000)
+  }
+
+  public addEventListener(event: string, handler: (event: Event) => void) {
+    this._container.addEventListener(event, handler)
   }
 }
 
