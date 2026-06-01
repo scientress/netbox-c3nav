@@ -3,6 +3,8 @@ import { defineConfig } from 'vite'
 import {fileURLToPath, URL} from "node:url";
 
 export default defineConfig({
+  base: "./",
+  
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
@@ -10,6 +12,7 @@ export default defineConfig({
   },
 
   build: {
+    assetsInlineLimit: 0,
     sourcemap: true,
     outDir: '../static/netbox_c3nav/vite',
     rolldownOptions: {

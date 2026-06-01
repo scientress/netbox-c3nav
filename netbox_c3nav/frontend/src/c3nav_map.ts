@@ -6,6 +6,20 @@ import {C3navApiTypes} from "./c3nav_types";
 import {LevelControl, OverlayControl} from "./c3nav_controls"
 
 
+// make vite include all images
+import markerIconUrl from 'leaflet/dist/images/marker-icon.png';
+import markerIconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png';
+import markerShadowUrl from 'leaflet/dist/images/marker-shadow.png';
+
+L.Icon.Default.mergeOptions({
+  iconUrl: markerIconUrl,
+  iconRetinaUrl: markerIconRetinaUrl,
+  shadowUrl: markerShadowUrl,
+  imagePath: '',
+});
+L.Icon.Default.imagePath = ''
+
+
 export class Map {
   instanceUrl: string
   api: C3NavApi
@@ -85,6 +99,7 @@ export class Map {
       this.markerLayers[l.id] = L.layerGroup().addTo(this.overlayGroups[l.id])
       this.overlayLayers[l.id] = L.layerGroup().addTo(this.overlayGroups[l.id])
       this.markerClusterGroups[l.id] = window.L.markerClusterGroup({
+        maxClusterRadius: 50,
         disableClusteringAtZoom: this.map.options.maxZoom - 1,
       }).addTo(this.markerLayers[l.id])
     }
