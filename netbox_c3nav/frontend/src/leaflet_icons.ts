@@ -11,6 +11,7 @@ export interface MdiIconOptions extends L.DivIconOptions {
   markerColor?: string
   markerStyle?: 'marker' | 'round' | 'icon-only'
   markerStyleChangeAnimated?: boolean
+  markerStyleChangeAnimationDuration?: string
   background?: boolean
   backgroundColor?: string
 }
@@ -71,6 +72,9 @@ export class MdiIcon extends L.DivIcon {
 
     if (this.options.markerStyleChangeAnimated) {
       div.classList.add('leaflet-icon-mdi-animated')
+    }
+    if (this.options.markerStyleChangeAnimationDuration) {
+      div.style.setProperty('--leaflet-icon-mdi-animation-duration', this.options.markerStyleChangeAnimationDuration)
     }
 
     const markerDiv: HTMLDivElement = document.createElement('div');
