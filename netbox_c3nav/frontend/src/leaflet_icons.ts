@@ -18,16 +18,10 @@ export interface MdiIconOptions extends L.DivIconOptions {
 
 export class MdiIcon extends L.DivIcon {
 
-  options: MdiIconOptions = {
-    icon: 'star',
-    iconSize: undefined,  // remove default from parent
-    className: undefined,  // remove default from parent
-  }
+  options: MdiIconOptions
 
   constructor(options: MdiIconOptions) {
-    // this probably will break stuff with leaflet 2.0
     super(options);
-    L.setOptions(this, options);
   }
 
   createIcon(oldIcon?: HTMLElement): HTMLElement {
@@ -103,6 +97,14 @@ export class MdiIcon extends L.DivIcon {
   }
 
 }
+
+MdiIcon.prototype.options = Object.create(MdiIcon.prototype.options)
+Object.assign(MdiIcon.prototype.options, {
+  icon: 'star',
+  iconSize: undefined,  // remove default from parent
+  className: undefined,  // remove default from parent
+})
+
 
 // @ts-ignore
 window.MdiIcon = MdiIcon;
