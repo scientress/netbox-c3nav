@@ -285,6 +285,7 @@ div.map-item-list > ul {
   --leaflet-icon-mdi-marker-background-color: var(--tblr-bg-surface-inverted);
   --leaflet-icon-mdi-icon-size: calc(var(--leaflet-icon-mdi-marker-size) * .70);
   --leaflet-icon-mdi-icon-color: var(--tblr-primary-fg);
+  --leaflet-icon-mdi-animation-duration: 0.75s;
 
   width: var(--leaflet-icon-mdi-marker-width);
   height: var(--leaflet-icon-mdi-marker-height);
@@ -298,6 +299,22 @@ div.map-item-list > ul {
     --leaflet-icon-mdi-icon-color: var(--tblr-text-inverted);
   }
 
+  &.leaflet-icon-mdi-round {
+    --leaflet-icon-mdi-marker-width: var(--leaflet-icon-mdi-marker-size);
+    --leaflet-icon-mdi-marker-height: var(--leaflet-icon-mdi-marker-size);
+    margin-left: calc(var(--leaflet-icon-mdi-marker-width) / -2);
+    margin-top: calc(var(--leaflet-icon-mdi-marker-height) / -2);
+  }
+
+  &.leaflet-icon-mdi-icon-only {
+    --leaflet-icon-mdi-icon-size: var(--leaflet-icon-mdi-marker-size);
+    --leaflet-icon-mdi-icon-color: var(--tblr-primary);
+    width: var(--leaflet-icon-mdi-icon-size);
+    height: var(--leaflet-icon-mdi-icon-size);
+    margin-left: calc(var(--leaflet-icon-mdi-icon-size) / -2);
+    margin-top: calc(var(--leaflet-icon-mdi-icon-size) / -2);
+  }
+
   & &-marker {
     position: absolute;
     left: 50%;
@@ -307,6 +324,26 @@ div.map-item-list > ul {
     border-radius: 50% 50% 50% 0;
     transform: translate(-50%, -50%) rotate(-45deg);
     background: var(--leaflet-icon-mdi-marker-color);
+  }
+
+  &.leaflet-icon-mdi-round &-marker {
+    border-radius: 50%;
+  }
+
+  &.leaflet-icon-mdi-icon-only &-marker {
+    display: none;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+  }
+
+  &.leaflet-icon-mdi-animated {
+    transition:
+      width var(--leaflet-icon-mdi-animation-duration) ease-in-out,
+      height var(--leaflet-icon-mdi-animation-duration) ease-in-out,
+      margin-left var(--leaflet-icon-mdi-animation-duration) ease-in-out,
+      margin-top var(--leaflet-icon-mdi-animation-duration) ease-in-out,
+      border-radius var(--leaflet-icon-mdi-animation-duration) ease-in-out;
   }
 
   .leaflet-icon-mdi-marker-background &-marker::after {
