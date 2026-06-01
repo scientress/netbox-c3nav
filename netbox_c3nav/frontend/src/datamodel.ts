@@ -13,7 +13,7 @@ export class DeviceMarker {
   device: DCIM.DeviceBrief | DCIM.Device | null = null
   unlocked: boolean = false
 
-  constructor(idOrDevicePosition?: number | C3navPosition) {
+  constructor(idOrDevicePosition?: number | C3navPosition, marker?: L.Marker) {
     if (typeof idOrDevicePosition === "number") {
       this.id = idOrDevicePosition
     } else if (typeof idOrDevicePosition === "object") {
@@ -21,6 +21,9 @@ export class DeviceMarker {
       this.setDevicePosition(idOrDevicePosition)
     } else {
       this.id = null
+    }
+    if (marker) {
+      this.leafletMarker = marker
     }
   }
 
@@ -85,10 +88,7 @@ export class DeviceMarker {
     }
     this.leafletMarker = L.marker(L.GeoJSON.coordsToLatLng([this.position.x, this.position.y]), {
       title: this.device.display || this.device.name,
-      icon: new MdiIcon({
-        icon: 'hexagon-multiple',
-        className: 'default-device',
-      }),
+      icon: this.getIcon(),
     })
     let popupBody = ""
     const displayURL = this.getDeviceDisplayURL()
@@ -113,6 +113,15 @@ export class DeviceMarker {
 
   }
 
+  private getIcon() {
+    return new MdiIcon({
+      icon: 'hexagon-multiple',
+      className: 'default-device',
+      markerStyle: 'round',
+      markerStyleChangeAnimated: true,
+    });
+  }
+
   public attach(overlay: L.LayerGroup) {
     if (this.leafletMarker === null) {
       this.createMarker()
@@ -120,16 +129,26 @@ export class DeviceMarker {
     this.leafletMarker.addTo(overlay)
   }
 
-  public save() {
+  public recreateMarker(map: Map) {
+    console.log('recreating device marker', this)
+    if (this.leafletMarker === null) return
+    //this.leafletMarker.remove()
+    // because marker.remove() doesn't work properly
+    this.leafletMarker.removeFrom(map.overlayGroups[this.position.level_id] as any as L.Map)
+    this.leafletMarker = null
+    this.attach(map.markerClusterGroups[this.position.level_id])
+  }
+
+  public async save(): Promise<DeviceMarker> {
     if (this.id === null) {
       // new marker
-      netBoxApi.post('plugins/c3nav/positions', {
+      return netBoxApi.post('plugins/c3nav/positions', {
         x: this.position.x,
         y: this.position.y,
         level_id: this.position.level_id,
         level_index: this.position.level_index,
         device: this.device.id
-      }).then((response: C3navPosition|ErrorResponse) => {
+      }).then(async (response: C3navPosition|ErrorResponse) => {
         if ('id' in response) {
           console.log(`marker saved, id:${response.id}`)
           this.id = response.id
@@ -139,12 +158,13 @@ export class DeviceMarker {
           console.error('error saving marker', response)
           alert((response as ErrorResponse).detail)
         }
+        return this
       })
     } else {
-      netBoxApi.patch(`plugins/c3nav/positions/${this.id}/`, {
+      return netBoxApi.patch(`plugins/c3nav/positions/${this.id}/`, {
         x: this.position.x,
         y: this.position.y,
-      }).then((response: C3navPosition|ErrorResponse) => {
+      }).then(async (response: C3navPosition|ErrorResponse) => {
         if ('id' in response) {
           console.log(`marker with id:${response.id} updated`, response)
           this.setDevicePosition(response)
@@ -153,6 +173,7 @@ export class DeviceMarker {
           console.error('error updating marker position', response)
           alert((response as ErrorResponse).detail)
         }
+        return this
       })
     }
   }

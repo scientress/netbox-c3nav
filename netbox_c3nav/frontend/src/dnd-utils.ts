@@ -28,12 +28,16 @@ export class DragDropMarker {
       this.marker = L.marker(pos, {
         interactive: false,
         keyboard: false,
-        icon: new MdiIcon({icon: 'plus-thick'}),
+        icon: new MdiIcon({
+          icon: 'plus-thick',
+          markerStyleChangeAnimated: true,
+          markerStyleChangeAnimationDuration: '0.3s',
+        }),
       }).addTo(this.map.getCurrentOverlayGroup())
       console.log('created drop marker', this.marker)
     } else {
       this.marker.setLatLng(pos)
-      console.log('moved drop marker', this.marker)
+      // console.log('moved drop marker', this.marker)
     }
   }
 
@@ -43,5 +47,14 @@ export class DragDropMarker {
       this.marker = null
       console.log('removed drop marker', this.marker)
     }
+  }
+
+  popMarker(): L.Marker | null {
+    if (this.marker !== null) {
+      const marker = this.marker
+      this.marker = null
+      return marker
+    }
+    return null;
   }
 }

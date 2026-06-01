@@ -90,12 +90,11 @@ manager.monitor.addEventListener('dragend', (event) => {
 
   console.log('dragend fired', operation)
 
-  // remove drang and drop marker if still there
-  drangDropMarker.remove()
-
   // Skip if drag operation was canceled (e.g. if escape key was pressed)
   if (canceled) {
     srcElement.style.removeProperty('filter')
+    // remove drang and drop marker if still there
+    drangDropMarker.remove()
     return;
   }
 
@@ -106,12 +105,24 @@ manager.monitor.addEventListener('dragend', (event) => {
     let mapPos = map.map.mouseEventToLatLng(event.nativeEvent as MouseEvent)
     console.log('drop pos:', dropPos)
     console.log('map pos:', mapPos)
-    const marker = new DeviceMarker()
+    const droppedMarker = drangDropMarker.popMarker()
+    const marker = new DeviceMarker(undefined, droppedMarker)
     marker.setDeviceFromDOM(srcElement)
     marker.setPosition(mapPos, map.getCurrentLevel())
-    marker.attach(map.getCurrentMarkerClusterGroup())
-    marker.save()
-    markers.push(marker)
+    const markerIconSpan = marker.leafletMarker.getElement().querySelector('span.mdi')
+    markerIconSpan.classList.replace('mdi-plus-thick', 'mdi-timer-sand-full')
+    marker.leafletMarker.getElement().classList.add('leaflet-icon-mdi-icon-rotating')
+    marker.save().then(() =>{
+      markers.push(marker)
+      marker.leafletMarker.getElement().classList.add('leaflet-icon-mdi-round')
+      marker.leafletMarker.getElement().classList.remove('leaflet-icon-mdi-icon-rotating')
+      markerIconSpan.classList.replace('mdi-timer-sand-full', 'mdi-check-bold')
+      // ToDo: figure out why this doesn't work
+      //marker.leafletMarker.getElement().addEventListener('animationend', (event) => {
+      window.setTimeout(() => {
+        marker.recreateMarker(map)
+      }, 3000)
+    })
     if (unlockMarkersButton.classList.contains('active')) {
       marker.unlock()
     }
@@ -123,6 +134,8 @@ manager.monitor.addEventListener('dragend', (event) => {
     )
   } else {
     console.log('dropped somewhere else', target)
+    // remove drang and drop marker if still there
+    drangDropMarker.remove()
   }
 });
 
@@ -134,7 +147,7 @@ manager.monitor.addEventListener('dragover', (event) => {
   if (operation.target?.id === droppable.id) {
     console.log('moved over map')
     srcElement.style.filter = 'opacity(0)'
-  } else if (operation.target === null) {
+  } else {
     console.log('moved out of map')
     srcElement.style.removeProperty('filter')
     drangDropMarker.remove()
