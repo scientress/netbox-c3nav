@@ -58,6 +58,10 @@ export default defineConfig(({ command, mode, isSsrBuild, isPreview}) => {
       port: 5173,
       strictPort: true,
       origin: 'http://localhost:5173',
+      hmr: true,
+      cors: {
+        origin: 'http://127.0.0.1:8000',
+      }
     }
   }
 })

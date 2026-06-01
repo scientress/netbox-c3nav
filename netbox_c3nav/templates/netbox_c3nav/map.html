@@ -9,6 +9,7 @@
 
 {% block head %}
     {% if settings.DEVELOPER %}
+    <script type="module" src="http://localhost:5173/@vite/client"></script>
     <link rel="stylesheet" href="http://localhost:5173/src/map.scss" />
     {% else %}
     <link rel="stylesheet" href="{% static 'netbox_c3nav/vite/map.css' %}" />
