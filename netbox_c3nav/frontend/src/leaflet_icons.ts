@@ -4,6 +4,7 @@ export interface MdiIconOptions extends L.DivIconOptions {
   icon?: string
   iconOffset?: [string, string]
   mdiIconSize?: string
+  iconRotation?: string
   color?: string
   markerSize?: string
   markerColor?: string
@@ -16,6 +17,7 @@ export class MdiIcon extends L.DivIcon {
   options: MdiIconOptions = {
     icon: 'star',
     iconSize: undefined,  // remove default from parent
+    className: undefined,  // remove default from parent
   }
 
   constructor(options: MdiIconOptions) {
@@ -28,7 +30,9 @@ export class MdiIcon extends L.DivIcon {
     const div: HTMLDivElement = (oldIcon && oldIcon.tagName === 'DIV') ?
       oldIcon as HTMLDivElement : document.createElement('div')
     div.classList.add('leaflet-marker-icon', 'leaflet-icon-mdi')
-
+    if (this.options.className) {
+      div.classList.add(this.options.className)
+    }
     if (this.options.mdiIconSize) {
       div.style.setProperty('--leaflet-icon-mdi-icon-size', this.options.mdiIconSize)
     } else if (this.options.iconSize) {
@@ -64,6 +68,9 @@ export class MdiIcon extends L.DivIcon {
     iconSpan.classList.add('leaflet-icon-mdi-icon', 'mdi', `mdi-${this.options.icon}`);
     if (this.options.color){
       iconSpan.style.color = this.options.color;
+    }
+    if (this.options.iconRotation) {
+      iconSpan.style.transform = `rotate(${this.options.iconRotation}) ${L.DomUtil.getStyle(iconSpan, 'transform') || ''}`
     }
     if (this.options.iconOffset && this.options.iconOffset.length === 2) {
       const iconOffset = this.options.iconOffset
