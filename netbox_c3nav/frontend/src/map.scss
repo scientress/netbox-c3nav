@@ -330,4 +330,34 @@ div.map-item-list > ul {
     top: calc(50% - 0.52em);  // 0.52 looks better
     left: calc(50% - 0.5em);
   }
+
+  & &-icon.mdi-hexagon-multiple::before {
+    transform: translate(1px, 0px);
+  }
+
+  @keyframes leaflet-icon-mdi-rotating {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes leaflet-icon-mdi-rotating-hexagons {
+    from {
+      transform: rotate(0deg) translate(1px, 0px)
+    }
+    to {
+      transform: rotate(360deg) translate(1px, 0px)
+    }
+  }
+
+  &.leaflet-icon-mdi-icon-rotating &-icon::before {
+    animation: leaflet-icon-mdi-rotating 2s linear infinite;
+  }
+  &.leaflet-icon-mdi-icon-rotating &-icon.mdi-hexagon-multiple::before,
+  &.default-device:hover &-icon.mdi-hexagon-multiple::before {
+    animation: leaflet-icon-mdi-rotating-hexagons 2s linear infinite;
+  }
 }

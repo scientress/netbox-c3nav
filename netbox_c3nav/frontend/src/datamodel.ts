@@ -85,7 +85,10 @@ export class DeviceMarker {
     }
     this.leafletMarker = L.marker(L.GeoJSON.coordsToLatLng([this.position.x, this.position.y]), {
       title: this.device.display || this.device.name,
-      icon: new MdiIcon({icon: 'hexagon-multiple', iconOffset: ['1px', '0']}),
+      icon: new MdiIcon({
+        icon: 'hexagon-multiple',
+        className: 'default-device',
+      }),
     })
     let popupBody = ""
     const displayURL = this.getDeviceDisplayURL()
