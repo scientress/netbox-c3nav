@@ -66,8 +66,8 @@ export class MdiIcon extends L.DivIcon {
       iconSpan.style.color = this.options.color;
     }
     if (this.options.iconOffset && this.options.iconOffset.length === 2) {
-      iconSpan.style.left = this.options.iconOffset[0];
-      iconSpan.style.right = this.options.iconOffset[1];
+      const iconOffset = this.options.iconOffset
+      iconSpan.style.transform = `translate(${iconOffset[0]}, ${iconOffset[1]}) ${L.DomUtil.getStyle(iconSpan, 'transform') || ''}`
     }
 
     L.DomUtil.empty(div)
