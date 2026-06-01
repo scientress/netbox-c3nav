@@ -1,7 +1,6 @@
 import {Map as LeafletMap, map as leafletMap, CRS, GeoJSON, LatLng, LayerGroup} from "leaflet";
 import * as L from 'leaflet'
 import "leaflet.markercluster"
-import {MarkerClusterGroup, markerClusterGroup} from "leaflet";
 import {C3NavApi} from "./c3nav-api";
 import {C3navApiTypes} from "./c3nav_types";
 import {LevelControl, OverlayControl} from "./c3nav_controls"
@@ -24,7 +23,7 @@ export class Map {
   overlayControl: OverlayControl
   overlayGroups: {[levelId: string]: L.LayerGroup}
   markerLayers: {[levelId: string]: L.LayerGroup}
-  markerClusterGroups: {[levelId: string]: MarkerClusterGroup}
+  markerClusterGroups: {[levelId: string]: L.MarkerClusterGroup}
   overlayLayers: {[levelId: string]: L.LayerGroup}
 
 
@@ -85,7 +84,7 @@ export class Map {
       this.overlayGroups[l.id] = this.levelControl.addLevel(l)
       this.markerLayers[l.id] = L.layerGroup().addTo(this.overlayGroups[l.id])
       this.overlayLayers[l.id] = L.layerGroup().addTo(this.overlayGroups[l.id])
-      this.markerClusterGroups[l.id] = markerClusterGroup({
+      this.markerClusterGroups[l.id] = window.L.markerClusterGroup({
         disableClusteringAtZoom: this.map.options.maxZoom - 1,
       }).addTo(this.markerLayers[l.id])
     }
