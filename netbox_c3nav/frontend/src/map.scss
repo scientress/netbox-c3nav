@@ -272,3 +272,62 @@ div.map-item-list > ul {
 #map .leaflet-overlay-pane .c3nav-graph-other-space {
   cursor: pointer;
 }
+
+
+/* Material Design Icons Leaflet Marker */
+
+.leaflet-icon-mdi {
+  --leaflet-icon-mdi-marker-size: 30px;
+  --leaflet-icon-mdi-marker-width: var(--leaflet-icon-mdi-marker-size);
+  --leaflet-icon-mdi-marker-height: calc(var(--leaflet-icon-mdi-marker-size) / cos(pi / 4));
+  --leaflet-icon-mdi-marker-color: var(--tblr-primary);
+  --leaflet-icon-mdi-marker-background-size: calc(var(--leaflet-icon-mdi-marker-size) * .75);
+  --leaflet-icon-mdi-marker-background-color: var(--tblr-bg-surface-inverted);
+  --leaflet-icon-mdi-icon-size: calc(var(--leaflet-icon-mdi-marker-size) * .70);
+  --leaflet-icon-mdi-icon-color: var(--tblr-primary-fg);
+
+  width: var(--leaflet-icon-mdi-marker-width);
+  height: var(--leaflet-icon-mdi-marker-height);
+  margin-left: calc(var(--leaflet-icon-mdi-marker-width) / -2);
+  margin-top: calc(var(--leaflet-icon-mdi-marker-height) * -1);
+
+  color: var(--leaflet-icon-mdi-icon-color);
+
+  &.leaflet-icon-mdi-marker-background {
+    --leaflet-icon-mdi-icon-size: calc(var(--leaflet-icon-mdi-marker-size) * .6);
+    --leaflet-icon-mdi-icon-color: var(--tblr-text-inverted);
+  }
+
+  & &-marker {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: var(--leaflet-icon-mdi-marker-size);
+    height: var(--leaflet-icon-mdi-marker-size);
+    border-radius: 50% 50% 50% 0;
+    transform: translate(-50%, -50%) rotate(-45deg);
+    background: var(--leaflet-icon-mdi-marker-color);
+  }
+
+  .leaflet-icon-mdi-marker-background &-marker::after {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: var(--leaflet-icon-mdi-marker-background-size);
+    height: var(--leaflet-icon-mdi-marker-background-size);
+    border-radius: 50%;
+    background: var(--leaflet-icon-mdi-marker-background-color);
+    transform: translate(-50%, -50%) rotate(-45deg);
+    content: '';
+  }
+
+  & &-icon {
+    position: absolute;
+    width: 1em;
+    height: 1em;
+    font-size: var(--leaflet-icon-mdi-icon-size);
+    line-height: 1;
+    top: calc(50% - 0.52em);  // 0.52 looks better
+    left: calc(50% - 0.5em);
+  }
+}
