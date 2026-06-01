@@ -108,7 +108,9 @@ export class DeviceMarker {
         return
       }
       this.updatePositionFromMarker()
-      this.save()
+      this.save().catch(error => {
+        alert(`Can't update position: ${error.message}`)
+      })
     })
 
   }
@@ -156,7 +158,7 @@ export class DeviceMarker {
         } else {
           // probably an error then
           console.error('error saving marker', response)
-          alert((response as ErrorResponse).detail)
+          return Promise.reject(new Error((response as ErrorResponse).detail))
         }
         return this
       })
@@ -171,7 +173,7 @@ export class DeviceMarker {
         } else {
           // probably an error then
           console.error('error updating marker position', response)
-          alert((response as ErrorResponse).detail)
+          return Promise.reject(new Error((response as ErrorResponse).detail))
         }
         return this
       })

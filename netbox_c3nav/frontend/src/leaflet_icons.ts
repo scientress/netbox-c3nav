@@ -22,6 +22,9 @@ export class MdiIcon extends L.DivIcon {
 
   constructor(options: MdiIconOptions) {
     super(options);
+    if (!('popupAnchor' in options && !this.options.markerStyle || this.options.markerStyle === 'marker')) {
+      this.options.popupAnchor = [0, -21]
+    }
   }
 
   createIcon(oldIcon?: HTMLElement): HTMLElement {

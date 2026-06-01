@@ -106,27 +106,39 @@ manager.monitor.addEventListener('dragend', (event) => {
     console.log('drop pos:', dropPos)
     console.log('map pos:', mapPos)
     const droppedMarker = drangDropMarker.popMarker()
+    const droppedMarkerLayer = map.getCurrentOverlayGroup()
+    const markerIconSpan = droppedMarker.getElement().querySelector('span.mdi')
     const marker = new DeviceMarker(undefined, droppedMarker)
     marker.setDeviceFromDOM(srcElement)
     marker.setPosition(mapPos, map.getCurrentLevel())
-    const markerIconSpan = marker.leafletMarker.getElement().querySelector('span.mdi')
     markerIconSpan.classList.replace('mdi-plus-thick', 'mdi-timer-sand-full')
     marker.leafletMarker.getElement().classList.add('leaflet-icon-mdi-icon-rotating')
-    marker.save().then(() =>{
-      markers.push(marker)
-      marker.leafletMarker.getElement().classList.add('leaflet-icon-mdi-round')
-      marker.leafletMarker.getElement().classList.remove('leaflet-icon-mdi-icon-rotating')
-      markerIconSpan.classList.replace('mdi-timer-sand-full', 'mdi-check-bold')
-      // ToDo: figure out why this doesn't work
-      //marker.leafletMarker.getElement().addEventListener('animationend', (event) => {
+    marker.save().then((success) =>{
+        markers.push(marker)
+        marker.leafletMarker.getElement().classList.add('leaflet-icon-mdi-round')
+        marker.leafletMarker.getElement().classList.remove('leaflet-icon-mdi-icon-rotating')
+        markerIconSpan.classList.replace('mdi-timer-sand-full', 'mdi-check-bold')
+        window.setTimeout(() => {
+          marker.recreateMarker(map)
+        }, 3000)
+    }).catch((error: Error) => {
       window.setTimeout(() => {
-        marker.recreateMarker(map)
-      }, 3000)
+        srcElement.style.removeProperty('filter')
+        srcElement.style.removeProperty('display')
+      }, 1000)
+      droppedMarker.getElement().classList.remove('leaflet-icon-mdi-icon-rotating')
+      markerIconSpan.classList.replace('mdi-timer-sand-full', 'mdi-cloud-alert')
+      droppedMarker.getElement().style.setProperty('--leaflet-icon-mdi-marker-color', 'var(--tblr-red)')
+      droppedMarker.getElement().style.setProperty('--leaflet-icon-mdi-icon-color', 'var(--tblr-red-fg)')
+      window.setTimeout(() => {
+        droppedMarker.removeFrom(droppedMarkerLayer as any as L.Map)
+      }, 10000)
+      console.log('marker', droppedMarker)
+      droppedMarker.bindPopup(`Can't save device position: ${error.message}`).openPopup()
     })
     if (unlockMarkersButton.classList.contains('active')) {
       marker.unlock()
     }
-    source.element.remove()
     console.log('added marker', marker)
     console.log(
       'c3nav position',
