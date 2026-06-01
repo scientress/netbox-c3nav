@@ -4,6 +4,7 @@ import {DCIM} from "./netbox_types";
 import {C3navApiTypes} from "./c3nav_types";
 import {ListResponse, netBoxApi} from "./netbox_api";
 import {Map} from "./c3nav_map";
+import {MdiIcon} from "./leaflet_icons";
 
 export class DeviceMarker {
   id: number | null = null
@@ -84,6 +85,7 @@ export class DeviceMarker {
     }
     this.leafletMarker = L.marker(L.GeoJSON.coordsToLatLng([this.position.x, this.position.y]), {
       title: this.device.display || this.device.name,
+      icon: new MdiIcon({icon: 'hexagon-multiple', iconOffset: ['1px', '0']}),
     })
     let popupBody = ""
     const displayURL = this.getDeviceDisplayURL()

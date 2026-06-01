@@ -1,6 +1,7 @@
 import {Map} from "./c3nav_map";
 import * as L from "leaflet";
 import {Marker} from "leaflet";
+import { MdiIcon } from "./leaflet_icons";
 
 
 class NoShadowDefaultIcon extends L.Icon.Default {
@@ -16,7 +17,7 @@ class NoShadowDefaultIcon extends L.Icon.Default {
 export class DragDropMarker {
   private map: Map
   protected marker: Marker = null
-  icon = new NoShadowDefaultIcon()
+  noShadowDefaultIcon = new NoShadowDefaultIcon()
 
   constructor(map: Map) {
     this.map = map
@@ -27,7 +28,7 @@ export class DragDropMarker {
       this.marker = L.marker(pos, {
         interactive: false,
         keyboard: false,
-        icon: this.icon,
+        icon: new MdiIcon({icon: 'plus-thick'}),
       }).addTo(this.map.getCurrentOverlayGroup())
       console.log('created drop marker', this.marker)
     } else {
