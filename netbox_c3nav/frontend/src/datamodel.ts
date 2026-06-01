@@ -171,7 +171,7 @@ export async function loadMarkers(map: Map) {
     r = await netBoxApi.get(r?.next || 'plugins/c3nav/positions') as ListResponse<C3navPosition>
     for (const dp of r.results) {
       const savedMarker = new DeviceMarker(dp)
-      savedMarker.attach(map.markerLayers[dp.level_id])
+      savedMarker.attach(map.markerClusterGroups[dp.level_id])
       markers.push(savedMarker)
     }
   } while (r.next)

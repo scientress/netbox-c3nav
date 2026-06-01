@@ -8,13 +8,11 @@
 {% block title %}Map{% if edit %} - Edit Device Positions{% endif %}{% endblock %}
 
 {% block head %}
-    <link rel="stylesheet" href="{% static 'netbox_c3nav/vendor/leaflet/leaflet.css' %}" />
     {% if settings.DEVELOPER %}
     <link rel="stylesheet" href="http://localhost:5173/src/map.scss" />
     {% else %}
     <link rel="stylesheet" href="{% static 'netbox_c3nav/vite/map.css' %}" />
     {% endif %}
-{#    <script src="{% static 'netbox_c3nav/vendor/leaflet/leaflet.js' %}"></script>#}
 {% endblock %}
 
 {% block controls %}

@@ -1,5 +1,6 @@
-import {Map as LeafletMap, map as leafletmap, CRS, LatLngBounds, GeoJSON, LatLng, map, LayerGroup} from "leaflet";
+import {Map as LeafletMap, map as leafletMap, CRS, GeoJSON, LatLng, LayerGroup} from "leaflet";
 import * as L from 'leaflet'
+import "leaflet.markercluster"
 import {C3NavApi} from "./c3nav-api";
 import {C3navApiTypes} from "./c3nav_types";
 import {LevelControl, OverlayControl} from "./c3nav_controls"
@@ -22,6 +23,7 @@ export class Map {
   overlayControl: OverlayControl
   overlayGroups: {[levelId: string]: L.LayerGroup}
   markerLayers: {[levelId: string]: L.LayerGroup}
+  markerClusterGroups: {[levelId: string]: L.MarkerClusterGroup}
   overlayLayers: {[levelId: string]: L.LayerGroup}
 
 
@@ -33,6 +35,7 @@ export class Map {
 
     this.overlayGroups = {}
     this.markerLayers = {}
+    this.markerClusterGroups = {}
     this.overlayLayers = {}
 
     console.log('map init', this, this.api)
@@ -49,7 +52,7 @@ export class Map {
     this.map_settings = await this.api.get('map/settings/');
     const raw_bounds: C3navApiTypes.BoundsSchema = await this.api.get('map/bounds/')
     this.map_bounds = GeoJSON.coordsToLatLngs(raw_bounds)
-    this.map = leafletmap(element, {
+    this.map = leafletMap(element, {
       // renderer: L.svg({padding: 2}),
       zoom: 0,
       maxZoom: 6,
@@ -81,6 +84,9 @@ export class Map {
       this.overlayGroups[l.id] = this.levelControl.addLevel(l)
       this.markerLayers[l.id] = L.layerGroup().addTo(this.overlayGroups[l.id])
       this.overlayLayers[l.id] = L.layerGroup().addTo(this.overlayGroups[l.id])
+      this.markerClusterGroups[l.id] = L.markerClusterGroup({
+        disableClusteringAtZoom: this.map.options.maxZoom - 1,
+      }).addTo(this.markerLayers[l.id])
     }
 
     this.levelControl.setLevel(this.map_settings.initial_level)
@@ -96,6 +102,10 @@ export class Map {
 
   public getCurrentMarkerLayer(): LayerGroup {
     return this.markerLayers[this.levelControl.getCurrentLevelId()]
+  }
+
+  public getCurrentMarkerClusterGroup(): LayerGroup {
+    return this.markerClusterGroups[this.levelControl.getCurrentLevelId()]
   }
 
   public getCurrentOverlayLayer(): LayerGroup {

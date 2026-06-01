@@ -109,7 +109,7 @@ manager.monitor.addEventListener('dragend', (event) => {
     const marker = new DeviceMarker()
     marker.setDeviceFromDOM(srcElement)
     marker.setPosition(mapPos, map.getCurrentLevel())
-    marker.attach(map.getCurrentMarkerLayer())
+    marker.attach(map.getCurrentMarkerClusterGroup())
     marker.save()
     markers.push(marker)
     if (unlockMarkersButton.classList.contains('active')) {
