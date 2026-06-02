@@ -13,6 +13,13 @@ TBD
 ### Added
 - Proxying of c3nav tiles with insertion of the tile_access_token
 - Support for a separate c3nav api key for the frontend
+- Custom leaflet marker with 3 different styles supporting all [Material Design Icons](https://pictogrammers.com/library/mdi/)
+- Animated visual feedback for the current state of creating/updating device positions
+- Error messages in the UI if placing a device fails
+- Custom feedback element for drag-and-drop operation
+- Removed DragDropMarker since we don't need it anymore
+- Respects prefers-reduced-motion in CSS and JS
+- Changes the mouse cursor into a crosshair while placing devices
 
 ### Fixed
 - Navigation items now have the correct permissions set and only show the actions the user is authorized to do
