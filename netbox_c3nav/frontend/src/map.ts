@@ -1,9 +1,9 @@
 import {DragDropManager, Draggable, Droppable, Feedback} from '@dnd-kit/dom';
 import {pointerIntersection} from '@dnd-kit/collision';
 import { gsap } from "gsap";
+import * as L from 'leaflet';
 import {Map} from "./c3nav_map";
 import {MapCursor} from "./dnd-plugins";
-import {DragDropMarker} from "./dnd-utils";
 import {DeviceMarker, loadMarkers, loadOverlays} from "./datamodel";
 import {netBoxApi} from "./netbox_api";
 import {MdiIcon} from "./leaflet_icons";
@@ -11,6 +11,7 @@ import {MdiIcon} from "./leaflet_icons";
 // @ts-ignore
 window.netBoxApi = netBoxApi
 
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 const netbox_c3nav_settings = JSON.parse(document.getElementById('map').dataset.settings);
 const map = new Map(netbox_c3nav_settings.c3nav_url, netbox_c3nav_settings.api_key, netbox_c3nav_settings.tileserver_url)
 const unlockMarkersButton = document.getElementById('unlockMarkers');
@@ -59,7 +60,6 @@ const manager = new DragDropManager({
   plugins: (defaults) => [
     ...defaults,
     MapCursor.configure({}),
-    // Cursor.configure({cursor: 'crosshair'}),
     Feedback.configure({
       dropAnimation: null,
     }),
@@ -76,9 +76,7 @@ unpositionedItems.forEach(unpositionedItem => {
 
 // setup custom drag overlay
 
-const feedback = manager.plugins.find(
-  (plugin): plugin is Feedback => plugin instanceof Feedback
-)
+const feedback: Feedback = manager.registry.plugins.get(Feedback)
 const dragOverlayMarker = new MdiIcon({
   icon: 'plus-thick',
 })
@@ -88,24 +86,31 @@ const overlayOffsetElement = document.createElement('div')
 overlayElement.appendChild(overlayOffsetElement)
 overlayOffsetElement.classList.add('netbox-c3nav-dnd-overlay-origin-offset')
 overlayOffsetElement.appendChild(dragOverlayMarker.createIcon())
-document.getElementById('page-content').appendChild(overlayElement)
-
+document.body.appendChild(overlayElement)
 feedback.overlay = overlayElement
 
 const droppable = new Droppable({
   element: document.getElementById('map'),
   id: 'map', // Required - must be unique
-  collisionDetector: pointerIntersection
-  // effects(){
-  //   return [
-  //     () => droppable.isDropTarget
-  //       ? element.classList.add('active')
-  //       : element.classList.remove('active')
-  //   ];
-  // }
+  collisionDetector: pointerIntersection,
+  effects(){
+    return [
+      () => droppable.isDropTarget
+        ? overlayElement.classList.add('over-map')
+        : overlayElement.classList.remove('over-map')
+    ];
+  }
   }, manager);
 
-const drangDropMarker = new DragDropMarker(map)
+manager.monitor.addEventListener('dragstart', (event) => {
+  const {operation} = event;
+  const {source} = operation;
+
+  // if there is a error message active for the device clear it
+  if ('clearError' in source.data) {
+    source.data.clearError();
+  }
+})
 
 manager.monitor.addEventListener('dragend', (event) => {
   const {operation, canceled} = event;
@@ -116,29 +121,41 @@ manager.monitor.addEventListener('dragend', (event) => {
 
   // Skip if drag operation was canceled (e.g. if escape key was pressed)
   if (canceled) {
-    // remove drang and drop marker if still there
-    drangDropMarker.remove()
     return;
   }
 
-  // Move element to drop target if dropped on droppable
+  // Save device position if device was dropped on map
   if (target && target.id === droppable.id) {
     console.log('dropped onto map')
+    srcElement.classList.add('saving')
+    // disable the source draggable to prevent it being added a 2nd time while we are saving the position
+    source.disabled = true
+
     let dropPos = operation.position.current
     let mapPos = map.map.mouseEventToLatLng(event.nativeEvent as MouseEvent)
     console.log('drop pos:', dropPos)
     console.log('map pos:', mapPos)
-    const droppedMarker = drangDropMarker.popMarker()
     const droppedMarkerLayer = map.getCurrentOverlayGroup()
+    const droppedMarker = L.marker(mapPos, {
+        interactive: false,
+        keyboard: false,
+        icon: new MdiIcon({
+          icon: 'plus-thick',
+          markerStyleChangeAnimated: !prefersReducedMotion,
+          markerStyleChangeAnimationDuration: '0.3s',
+        }),
+      }).addTo(droppedMarkerLayer)
     const markerIconSpan = droppedMarker.getElement().querySelector('span.mdi')
     const marker = new DeviceMarker(undefined, droppedMarker)
-
-    srcElement.classList.add('saving')
-
-    marker.setDeviceFromDOM(srcElement)
-    marker.setPosition(mapPos, map.getCurrentLevel())
+    // temporarily replace the icon with a sand timer icon while the position is saved
     markerIconSpan.classList.replace('mdi-plus-thick', 'mdi-timer-sand-full')
-    marker.leafletMarker.getElement().classList.add('leaflet-icon-mdi-icon-rotating')
+    if (!prefersReducedMotion) {
+      marker.leafletMarker.getElement().classList.add('leaflet-icon-mdi-icon-rotating')
+    }
+    marker.setDeviceFromDOM(srcElement)
+    marker.setPosition(mapPos, map.getCurrentLevel(), true)
+    console.log('created new device marker, saving marker...', marker)
+
     marker.save().then((success) =>{
       markers.push(marker)
       marker.leafletMarker.getElement().classList.add('leaflet-icon-mdi-round')
@@ -159,11 +176,12 @@ manager.monitor.addEventListener('dragend', (event) => {
       })
     }).catch((error: Error) => {
       srcElement.classList.replace('saving', 'saving-failed')
-      gsap.to(srcElement, {
+      const messageAnimation = gsap.to(srcElement, {
         delay: 2,
         duration: 0.5,
         '--map-item-list-message-opacity': 0,
-      }).then((result) => {
+      })
+      messageAnimation.then((result) => {
         srcElement.classList.remove('saving-failed')
         srcElement.style.removeProperty('--map-item-list-message-opacity')
       })
@@ -175,39 +193,15 @@ manager.monitor.addEventListener('dragend', (event) => {
         droppedMarker.removeFrom(droppedMarkerLayer as any as L.Map)
       }, 10000)
       droppedMarker.bindPopup(`Can't save device position: ${error.message}`).openPopup()
+
+      // re-enable the draggable and add clear error function
+      source.data['clearError'] = () => {
+        droppedMarker.removeFrom(droppedMarkerLayer as any as L.Map)
+        messageAnimation.revert()
+        srcElement.classList.remove('saving-failed')
+        delete source.data['clearError']
+      }
+      source.disabled = false
     })
-    if (unlockMarkersButton.classList.contains('active')) {
-      marker.unlock()
-    }
-    console.log('added marker', marker)
-    console.log(
-      'c3nav position',
-      `${netbox_c3nav_settings.c3nav_url}/l/c:${map.getCurrentLevel().level_index}:${mapPos.lng.toFixed(2)}:${mapPos.lat.toFixed(2)}`
-    )
-  } else {
-    console.log('dropped somewhere else', target)
-    // remove drang and drop marker if still there
-    drangDropMarker.remove()
   }
 });
-
-manager.monitor.addEventListener('dragover', (event) => {
-  const {operation} = event;
-  const srcElement = operation.source.element as HTMLElement
-  console.log('dragover', event)
-
-  if (operation.target?.id === droppable.id) {
-    console.log('moved over map')
-  } else {
-    console.log('moved out of map')
-    drangDropMarker.remove()
-  }
-})
-
-manager.monitor.addEventListener('dragmove', (event) => {
-  const {operation} = event;
-  if (operation.target?.id === droppable.id) {
-    let mapPos = map.map.mouseEventToLatLng(event.nativeEvent as MouseEvent)
-    drangDropMarker.moved(mapPos)
-  }
-})

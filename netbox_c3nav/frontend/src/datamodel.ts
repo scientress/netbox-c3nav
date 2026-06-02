@@ -27,7 +27,7 @@ export class DeviceMarker {
     }
   }
 
-  setPosition(pos: L.LatLng, level: number | C3navApiTypes.LevelSchema) {
+  setPosition(pos: L.LatLng, level: number | C3navApiTypes.LevelSchema, skipMarkerUpdate?: boolean) {
     if (this.position === null || typeof this.position === "undefined") {
       this.position = {
         x: pos.lng,
@@ -42,7 +42,7 @@ export class DeviceMarker {
       this.position.level_index = (typeof level === 'number') ? undefined : level.level_index
     }
 
-    if (this.leafletMarker) {
+    if (this.leafletMarker && !skipMarkerUpdate) {
       this.leafletMarker.setLatLng(pos)
     }
   }

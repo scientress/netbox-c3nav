@@ -58,19 +58,19 @@ div.map-item-list {
       align-items: center;
       font-size: 28px;
       font-weight: bold;
-      font-style: oblique;
       text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.10);
       opacity: var(--map-item-list-message-opacity);
     }
 
     li.saving::after {
+      font-style: oblique;
       content: "Saving...";
     }
 
     li.saved::after {
       background-color: var(--tblr-green-darken);
       color: var(--tblr-green-fg);
-      content: "Saved...";
+      content: "Saved";
     }
 
     li.saving-failed::after {
