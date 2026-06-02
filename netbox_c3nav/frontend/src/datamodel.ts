@@ -12,6 +12,7 @@ export class DeviceMarker {
   leafletMarker: L.Marker | null = null
   device: DCIM.DeviceBrief | DCIM.Device | null = null
   unlocked: boolean = false
+  draggingStyleElement?: HTMLStyleElement
 
   constructor(idOrDevicePosition?: number | C3navPosition, marker?: L.Marker) {
     if (typeof idOrDevicePosition === "number") {
@@ -107,14 +108,14 @@ export class DeviceMarker {
         console.warn('marker dragged but not unlocked??? - ignoring')
         return
       }
+      this.injectDraggingStyle()
       this.leafletMarker.getElement().classList.remove('leaflet-icon-mdi-round')
       this.leafletMarker.getElement().style.setProperty('--leaflet-icon-mdi-animation-duration', '0.25s');
       (this.leafletMarker.getIcon().options as MdiIconOptions).markerStyle = 'marker'
-      console.log(this.leafletMarker.getIcon().options)
     })
 
     this.leafletMarker.on('dragend', e => {
-      console.log(this.leafletMarker.getIcon().options)
+      this.removeDraggingStyle()
       if (!this.unlocked) {
         console.warn('marker dragged but not unlocked??? - ignoring')
         return
@@ -207,6 +208,25 @@ export class DeviceMarker {
   public lock() {
     this.unlocked = false
     this.leafletMarker.dragging?.disable()
+  }
+
+  private injectDraggingStyle() {
+    const styleEl: HTMLStyleElement = this.draggingStyleElement || document.createElement('style')
+    this.draggingStyleElement = styleEl
+
+    styleEl.textContent = `
+      #map { cursor: crosshair !important; }
+      .leaflet-dragging .leaflet-grab,
+      .leaflet-dragging .leaflet-grab .leaflet-interactive,
+      .leaflet-dragging .leaflet-marker-draggable {
+        cursor: crosshair !important;
+      }
+    `
+    document.head.prepend(styleEl)
+  }
+
+  private removeDraggingStyle() {
+    this.draggingStyleElement?.remove()
   }
 }
 
