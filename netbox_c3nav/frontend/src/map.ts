@@ -145,22 +145,14 @@ manager.monitor.addEventListener('dragend', (event) => {
           markerStyleChangeAnimationDuration: '0.3s',
         }),
       }).addTo(droppedMarkerLayer)
-    const markerIconSpan = droppedMarker.getElement().querySelector('span.mdi')
     const marker = new DeviceMarker(undefined, droppedMarker)
-    // temporarily replace the icon with a sand timer icon while the position is saved
-    markerIconSpan.classList.replace('mdi-plus-thick', 'mdi-timer-sand-full')
-    if (!prefersReducedMotion) {
-      marker.leafletMarker.getElement().classList.add('leaflet-icon-mdi-icon-rotating')
-    }
+
     marker.setDeviceFromDOM(srcElement)
     marker.setPosition(mapPos, map.getCurrentLevel(), true)
     console.log('created new device marker, saving marker...', marker)
 
     marker.save().then((success) =>{
       markers.push(marker)
-      marker.leafletMarker.getElement().classList.add('leaflet-icon-mdi-round')
-      marker.leafletMarker.getElement().classList.remove('leaflet-icon-mdi-icon-rotating')
-      markerIconSpan.classList.replace('mdi-timer-sand-full', 'mdi-check-bold')
       srcElement.classList.replace('saving', 'saved')
       gsap.to(srcElement, {
         delay: 2.5,
@@ -185,14 +177,9 @@ manager.monitor.addEventListener('dragend', (event) => {
         srcElement.classList.remove('saving-failed')
         srcElement.style.removeProperty('--map-item-list-message-opacity')
       })
-      droppedMarker.getElement().classList.remove('leaflet-icon-mdi-icon-rotating')
-      markerIconSpan.classList.replace('mdi-timer-sand-full', 'mdi-cloud-alert')
-      droppedMarker.getElement().style.setProperty('--leaflet-icon-mdi-marker-color', 'var(--tblr-red)')
-      droppedMarker.getElement().style.setProperty('--leaflet-icon-mdi-icon-color', 'var(--tblr-red-fg)')
       window.setTimeout(() => {
         droppedMarker.removeFrom(droppedMarkerLayer as any as L.Map)
       }, 10000)
-      droppedMarker.bindPopup(`Can't save device position: ${error.message}`).openPopup()
 
       // re-enable the draggable and add clear error function
       source.data['clearError'] = () => {

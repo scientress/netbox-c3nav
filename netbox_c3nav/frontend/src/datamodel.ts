@@ -13,6 +13,7 @@ export class DeviceMarker {
   device: DCIM.DeviceBrief | DCIM.Device | null = null
   unlocked: boolean = false
   draggingStyleElement?: HTMLStyleElement
+  inErrorState: boolean = false
 
   constructor(idOrDevicePosition?: number | C3navPosition, marker?: L.Marker) {
     if (typeof idOrDevicePosition === "number") {
@@ -83,14 +84,7 @@ export class DeviceMarker {
     return `${document.location.origin}/dcim/devices/${this.device?.id}`
   }
 
-  private createMarker() {
-    if (this.leafletMarker !== null) {
-      throw new Error('leaflet marker already created')
-    }
-    this.leafletMarker = L.marker(L.GeoJSON.coordsToLatLng([this.position.x, this.position.y]), {
-      title: this.device.display || this.device.name,
-      icon: this.createLeafletIcon(),
-    })
+  private attachPopup(): void {
     let popupBody = ""
     const displayURL = this.getDeviceDisplayURL()
     if (displayURL) {
@@ -102,6 +96,16 @@ export class DeviceMarker {
       popupBody += `<br><span class="text-secondary">${this.device.description}</span>`
     }
     this.leafletMarker.bindPopup(popupBody)
+  }
+
+  private createMarker() {
+    if (this.leafletMarker !== null) {
+      throw new Error('leaflet marker already created')
+    }
+    this.leafletMarker = L.marker(L.GeoJSON.coordsToLatLng([this.position.x, this.position.y]), {
+      title: this.device.display || this.device.name,
+      icon: this.createLeafletIcon(),
+    })
 
     this.leafletMarker.on("dragstart", (e) => {
       if (!this.unlocked) {
@@ -109,9 +113,9 @@ export class DeviceMarker {
         return
       }
       this.injectDraggingStyle()
-      this.leafletMarker.getElement().classList.remove('leaflet-icon-mdi-round')
+      // needs to be permanente because leaflet re-creates the marker icon
+      this.setMarkerStyle('marker', false)
       this.leafletMarker.getElement().style.setProperty('--leaflet-icon-mdi-animation-duration', '0.25s');
-      (this.leafletMarker.getIcon().options as MdiIconOptions).markerStyle = 'marker'
     })
 
     this.leafletMarker.on('dragend', e => {
@@ -120,16 +124,16 @@ export class DeviceMarker {
         console.warn('marker dragged but not unlocked??? - ignoring')
         return
       }
-      window.setTimeout(() => {
-        (this.leafletMarker.getIcon().options as MdiIconOptions).markerStyle = 'round'
-        this.leafletMarker.getElement().addEventListener('transitionend', e => {
-          this.leafletMarker.getElement().style.removeProperty('--leaflet-icon-mdi-animation-duration')
-        }, {once: true})
-        this.leafletMarker.getElement().classList.add('leaflet-icon-mdi-round')
-      }, 250)
+      this.leafletMarker.getElement().addEventListener('transitionend', e => {
+        this.leafletMarker.getElement().style.removeProperty('--leaflet-icon-mdi-animation-duration')
+      }, {once: true})
+      const previousPosition: [number, number] = [this.position.x, this.position.y]
       this.updatePositionFromMarker()
       this.save().catch(error => {
-        alert(`Can't update position: ${error.message}`)
+        [this.position.x, this.position.y] = previousPosition
+        this.clearError(5).then(() => {
+          console.log('cleared error')
+        })
       })
     })
 
@@ -162,6 +166,7 @@ export class DeviceMarker {
 
   public recreateMarker(map: Map) {
     console.log('recreating device marker', this)
+    this.inErrorState = false
     if (this.leafletMarker === null) return
     //this.leafletMarker.remove()
     // because marker.remove() doesn't work properly
@@ -170,42 +175,86 @@ export class DeviceMarker {
     this.attach(map.markerClusterGroups[this.position.level_id])
   }
 
-  public async save(): Promise<DeviceMarker> {
-    if (this.id === null) {
+  public async save(): Promise<DeviceMarker|Error> {
+    const creating:boolean = this.id === null
+    // temporarily replace the icon with a sand timer icon while the position is saved
+    this.setIcon('timer-sand-full', creating)
+    this.setRotating(true)
+
+    const request = (creating) ?
       // new marker
-      return netBoxApi.post('plugins/c3nav/positions', {
+      netBoxApi.post('plugins/c3nav/positions', {
         x: this.position.x,
         y: this.position.y,
         level_id: this.position.level_id,
         level_index: this.position.level_index,
         device: this.device.id
-      }).then(async (response: C3navPosition|ErrorResponse) => {
-        if ('id' in response) {
-          console.log(`marker saved, id:${response.id}`)
-          this.id = response.id
-          this.setDevicePosition(response as C3navPosition, true)
-        } else {
-          // probably an error then
-          console.error('error saving marker', response)
-          return Promise.reject(new Error((response as ErrorResponse).detail))
-        }
-        return this
       })
-    } else {
-      return netBoxApi.patch(`plugins/c3nav/positions/${this.id}/`, {
+      :
+      netBoxApi.patch(`plugins/c3nav/positions/${this.id}/`, {
         x: this.position.x,
         y: this.position.y,
-      }).then(async (response: C3navPosition|ErrorResponse) => {
-        if ('id' in response) {
-          console.log(`marker with id:${response.id} updated`, response)
-          this.setDevicePosition(response, true)
-        } else {
-          // probably an error then
-          console.error('error updating marker position', response)
-          return Promise.reject(new Error((response as ErrorResponse).detail))
-        }
-        return this
       })
+
+    return request.then(async (response: C3navPosition|ErrorResponse) => {
+      if ('id' in response) {
+        this.resetMarkerStyle()
+        this.setRotating(false)
+        this.setIcon('check-bold', true)
+        console.log(`marker with id:${response.id} ${creating ? 'created' : 'updated'}`, response)
+        this.setDevicePosition(response, true)
+      } else {
+        // probably an error then
+        console.error(`error ${creating ? 'setting' : 'updating'} device position`, response)
+        return Promise.reject(new Error((response as ErrorResponse).detail))
+      }
+      return this
+    }).catch((error: Error) => {
+      this.inErrorState = true
+      this.setRotating(false)
+      this.setIcon('cloud-alert', false)
+      this.setIconColor('var(--tblr-red-fg)', true)
+      this.setMarkerColor('var(--tblr-red)', true)
+      this.leafletMarker.bindPopup(`Error ${creating ? 'setting' : 'updating'} device position:<br>${error.message}`).openPopup()
+      return Promise.reject(error)
+    })
+  }
+
+  public async clearError(delay?: number): Promise<void> {
+    const clearError = (resolve: (value: void | PromiseLike<void>) => void): void => {
+      if (!this.inErrorState) return
+      console.log('clearing error on device marker', this)
+
+      const markerPos: L.LatLng = this.leafletMarker.getLatLng()
+      if (this.position.x !== markerPos.lng || this.position.y !== markerPos.lat) {
+        //this.leafletMarker.getElement().style.transition = 'transform3d 1s ease-in-out'
+        let isPositionReset = false
+        const fallBackTimeout = window.setTimeout(() => {
+          if (isPositionReset) return
+          isPositionReset = true
+          this.leafletMarker.setLatLng([this.position.y, this.position.x])
+        }, 2000)
+        this.leafletMarker.getElement().addEventListener('transitionend', e => {
+          if (isPositionReset) return
+          clearTimeout(fallBackTimeout)
+          isPositionReset = true
+          console.log('marker appearance reset', e)
+          this.leafletMarker.setLatLng([this.position.y, this.position.x])
+        }, {once: true})
+      }
+      this.leafletMarker.closePopup()
+      this.attachPopup()
+      this.resetIcon()
+      this.resetIconColor()
+      this.resetMarkerColor()
+      this.resetMarkerStyle()
+    }
+    if (typeof delay === 'number' && delay > 0) {
+      return new Promise(resolve => setTimeout(() => {
+        clearError(resolve)
+      }, delay * 1000))
+    } else {
+      return new Promise(resolve => clearError)
     }
   }
 
@@ -313,7 +362,7 @@ export class DeviceMarker {
 
   public resetIconColor(temporary: boolean = false): void {
     if (!this.leafletMarker) return
-    this.setIcon(this.getIconColor(), temporary)
+    this.setIconColor(this.getIconColor(), temporary)
   }
 
   public getMarkerColor(): string {
@@ -323,7 +372,7 @@ export class DeviceMarker {
   public setMarkerColor(color: string, temporary: boolean = false): void {
     if (!this.leafletMarker) return
     if (!temporary) {
-      (this.leafletMarker.getIcon() as MdiIcon).options.color = color || undefined
+      (this.leafletMarker.getIcon() as MdiIcon).options.markerColor = color || undefined
     }
     if (color) {
       this.leafletMarker.getElement()?.style.setProperty('--leaflet-icon-mdi-marker-color', color)
@@ -334,11 +383,11 @@ export class DeviceMarker {
 
   public resetMarkerColor(temporary: boolean = false): void {
     if (!this.leafletMarker) return
-    this.setIcon(this.getMarkerColor(), temporary)
+    this.setMarkerColor(this.getMarkerColor(), temporary)
   }
 
   public getMarkerStyle(): MdiIconMarkerStyles {
-    return (this.leafletMarker?.getIcon() as MdiIcon).options.markerStyle || 'round'
+    return 'round'
   }
 
   public setMarkerStyle(style: MdiIconMarkerStyles, temporary: boolean = false): void {
