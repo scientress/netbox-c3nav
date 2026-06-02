@@ -155,7 +155,7 @@ export class DeviceMarker {
     if (this.leafletMarker === null) return
     //this.leafletMarker.remove()
     // because marker.remove() doesn't work properly
-    this.leafletMarker.removeFrom(map.overlayGroups[this.position.level_id] as any as L.Map)
+    this.leafletMarker.removeFrom(map.markerClusterGroups[this.position.level_id] as any as L.Map)
     this.leafletMarker = null
     this.attach(map.markerClusterGroups[this.position.level_id])
   }
