@@ -89,7 +89,7 @@ export class DeviceMarker {
     }
     this.leafletMarker = L.marker(L.GeoJSON.coordsToLatLng([this.position.x, this.position.y]), {
       title: this.device.display || this.device.name,
-      icon: this.getIcon(),
+      icon: this.createLeafletIcon(),
     })
     let popupBody = ""
     const displayURL = this.getDeviceDisplayURL()
@@ -135,13 +135,22 @@ export class DeviceMarker {
 
   }
 
-  private getIcon() {
-    return new MdiIcon({
-      icon: 'hexagon-multiple',
+  private getIcon(): string {
+    // ToDo: get Icon for device-role
+    return 'hexagon-multiple'
+  }
+
+  private createLeafletIcon(options?: MdiIconOptions) {
+    const defaultOptions: MdiIconOptions = {
+      icon: this.getIcon(),
       className: 'default-device',
       markerStyle: 'round',
       markerStyleChangeAnimated: true,
-    });
+    }
+    if (typeof options === 'object') {
+      Object.assign(defaultOptions, options)
+    }
+    return new MdiIcon(defaultOptions);
   }
 
   public attach(overlay: L.LayerGroup) {
@@ -227,6 +236,54 @@ export class DeviceMarker {
 
   private removeDraggingStyle() {
     this.draggingStyleElement?.remove()
+  }
+
+  public replaceIcon(iconName: string, temporary: boolean = false) {
+    if (!this.leafletMarker) return
+    if (!temporary) {
+      (this.leafletMarker.getIcon() as MdiIcon).options.icon = iconName
+    }
+    const markerIconSpan = this.leafletMarker.getElement()?.querySelector('span.mdi')
+    if (!markerIconSpan) return
+    Array.from(markerIconSpan.classList.values()).forEach(className => {
+      if (className.match(/^mdi-.*/)) markerIconSpan.classList.remove(className)
+    })
+    markerIconSpan.classList.add(`mdi-${iconName}`)
+  }
+
+  public resetIcon(temporary: boolean = false) {
+    this.replaceIcon(this.getIcon(), temporary)
+  }
+
+  public setRotation(rotation: number|string, temporary: boolean = false) {
+    if (!this.leafletMarker) return
+    if (typeof rotation !== 'string') {
+      rotation = `${rotation}deg`
+    }
+    if (!temporary) {
+      (this.leafletMarker.getIcon() as MdiIcon).options.iconRotation = rotation
+    }
+    const markerIconSpan: HTMLSpanElement = this.leafletMarker.getElement()?.querySelector('span.mdi')
+    if (markerIconSpan) {
+      let existingTransform = L.DomUtil.getStyle(markerIconSpan, 'transform') || ''
+      existingTransform.replace(/rotate([^)]*?)/, '')
+      markerIconSpan.style.transform = `rotate(${rotation}) ${existingTransform}`
+    }
+  }
+
+  public setRotating(rotating: boolean, temporary: boolean = false, force: boolean = false) {
+    if (!this.leafletMarker) return
+    if (rotating && force || !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      rotating = false
+    }
+    if (!temporary) {
+      (this.leafletMarker.getIcon() as MdiIcon).options.iconRotating = rotating
+    }
+    if (rotating) {
+      this.leafletMarker.getElement()?.classList.add('leaflet-icon-mdi-icon-rotating')
+    } else {
+      this.leafletMarker.getElement()?.classList.remove('leaflet-icon-mdi-icon-rotating')
+    }
   }
 }
 
