@@ -436,6 +436,12 @@ div.map-item-list {
   &.default-device:hover &-icon.mdi-hexagon-multiple::before {
     animation: leaflet-icon-mdi-rotating-hexagons 2s linear infinite;
   }
+
+  @media (prefers-reduced-motion: reduce) {
+    &.default-device:hover &-icon.mdi-hexagon-multiple::before {
+      animation: none;
+    }
+  }
 }
 
 .netbox-c3nav-dnd-overlay {
