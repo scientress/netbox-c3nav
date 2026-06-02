@@ -28,18 +28,57 @@ div.page-body div.container-fluid {
 
 div.map-item-list {
 
-    padding-left: 1rem;
-    display: flex;
-    flex-direction: column;
-    /*align-items: stretch;*/
-    justify-content: flex-start;
-}
+  padding-left: 1rem;
+  display: flex;
+  flex-direction: column;
+  /*align-items: stretch;*/
+  justify-content: flex-start;
 
-div.map-item-list > ul {
+  & > ul {
     min-height: 0;
     overflow-y: scroll;
     /* because css somtimes is garbage this is the only way to prevent this div from growing that I know of */
     height: calc(100vh - 240px);
+    --map-item-list-message-opacity: 1;
+
+    li[aria-roledescription=draggable][aria-grabbed=true]::after,
+    li.saving::after, li.saved::after, li.saving-failed::after {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: var(--tblr-primary-darken);
+      content: "";
+    }
+
+    li.saving::after, li.saved::after, li.saving-failed::after {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 28px;
+      font-weight: bold;
+      font-style: oblique;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.10);
+      opacity: var(--map-item-list-message-opacity);
+    }
+
+    li.saving::after {
+      content: "Saving...";
+    }
+
+    li.saved::after {
+      background-color: var(--tblr-green-darken);
+      color: var(--tblr-green-fg);
+      content: "Saved...";
+    }
+
+    li.saving-failed::after {
+      background-color: var(--tblr-red-darken);
+      color: var(--tblr-red-fg);
+      content: "Error";
+    }
+  }
 }
 
 
@@ -396,5 +435,28 @@ div.map-item-list > ul {
   &.leaflet-icon-mdi-icon-rotating &-icon.mdi-hexagon-multiple::before,
   &.default-device:hover &-icon.mdi-hexagon-multiple::before {
     animation: leaflet-icon-mdi-rotating-hexagons 2s linear infinite;
+  }
+}
+
+.netbox-c3nav-dnd-overlay {
+  transform-origin: var(--dnd-transform-origin);
+
+  &:not([data-dnd-dragging]) {
+    display: none;
+  }
+
+  &-origin-offset {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    translate: var(--dnd-transform-origin) 0;
+  }
+
+  .leaflet-icon-mdi {
+    position: absolute;
+    left: 0;
+    top: 0;
   }
 }

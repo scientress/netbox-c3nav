@@ -1,10 +1,12 @@
-import {DragDropManager, Draggable, Droppable} from '@dnd-kit/dom';
+import {DragDropManager, Draggable, Droppable, Feedback} from '@dnd-kit/dom';
 import {pointerIntersection} from '@dnd-kit/collision';
+import { gsap } from "gsap";
 import {Map} from "./c3nav_map";
 import {MapCursor} from "./dnd-plugins";
 import {DragDropMarker} from "./dnd-utils";
 import {DeviceMarker, loadMarkers, loadOverlays} from "./datamodel";
 import {netBoxApi} from "./netbox_api";
+import {MdiIcon} from "./leaflet_icons";
 
 // @ts-ignore
 window.netBoxApi = netBoxApi
@@ -58,6 +60,9 @@ const manager = new DragDropManager({
     ...defaults,
     MapCursor.configure({}),
     // Cursor.configure({cursor: 'crosshair'}),
+    Feedback.configure({
+      dropAnimation: null,
+    }),
     ]
 });
 const unpositionedItems: NodeListOf<HTMLLIElement> = document.querySelectorAll('ul.map-unpositioned-items li')
@@ -67,6 +72,25 @@ unpositionedItems.forEach(unpositionedItem => {
     element: unpositionedItem,
   }, manager)
 })
+
+
+// setup custom drag overlay
+
+const feedback = manager.plugins.find(
+  (plugin): plugin is Feedback => plugin instanceof Feedback
+)
+const dragOverlayMarker = new MdiIcon({
+  icon: 'plus-thick',
+})
+const overlayElement = document.createElement('div')
+overlayElement.classList.add('netbox-c3nav-dnd-overlay')
+const overlayOffsetElement = document.createElement('div')
+overlayElement.appendChild(overlayOffsetElement)
+overlayOffsetElement.classList.add('netbox-c3nav-dnd-overlay-origin-offset')
+overlayOffsetElement.appendChild(dragOverlayMarker.createIcon())
+document.getElementById('page-content').appendChild(overlayElement)
+
+feedback.overlay = overlayElement
 
 const droppable = new Droppable({
   element: document.getElementById('map'),
@@ -92,7 +116,6 @@ manager.monitor.addEventListener('dragend', (event) => {
 
   // Skip if drag operation was canceled (e.g. if escape key was pressed)
   if (canceled) {
-    srcElement.style.removeProperty('filter')
     // remove drang and drop marker if still there
     drangDropMarker.remove()
     return;
@@ -109,23 +132,41 @@ manager.monitor.addEventListener('dragend', (event) => {
     const droppedMarkerLayer = map.getCurrentOverlayGroup()
     const markerIconSpan = droppedMarker.getElement().querySelector('span.mdi')
     const marker = new DeviceMarker(undefined, droppedMarker)
+
+    srcElement.classList.add('saving')
+
     marker.setDeviceFromDOM(srcElement)
     marker.setPosition(mapPos, map.getCurrentLevel())
     markerIconSpan.classList.replace('mdi-plus-thick', 'mdi-timer-sand-full')
     marker.leafletMarker.getElement().classList.add('leaflet-icon-mdi-icon-rotating')
     marker.save().then((success) =>{
-        markers.push(marker)
-        marker.leafletMarker.getElement().classList.add('leaflet-icon-mdi-round')
-        marker.leafletMarker.getElement().classList.remove('leaflet-icon-mdi-icon-rotating')
-        markerIconSpan.classList.replace('mdi-timer-sand-full', 'mdi-check-bold')
-        window.setTimeout(() => {
-          marker.recreateMarker(map)
-        }, 3000)
+      markers.push(marker)
+      marker.leafletMarker.getElement().classList.add('leaflet-icon-mdi-round')
+      marker.leafletMarker.getElement().classList.remove('leaflet-icon-mdi-icon-rotating')
+      markerIconSpan.classList.replace('mdi-timer-sand-full', 'mdi-check-bold')
+      srcElement.classList.replace('saving', 'saved')
+      gsap.to(srcElement, {
+        delay: 2.5,
+        duration: 0.5,
+        height: '0',
+        'padding-top': '0',
+        'padding-bottom': '0',
+        display: 'none',
+        overflow: 'hidden',
+      }).then((result) => {
+        srcElement.remove()
+        marker.recreateMarker(map)
+      })
     }).catch((error: Error) => {
-      window.setTimeout(() => {
-        srcElement.style.removeProperty('filter')
-        srcElement.style.removeProperty('display')
-      }, 1000)
+      srcElement.classList.replace('saving', 'saving-failed')
+      gsap.to(srcElement, {
+        delay: 2,
+        duration: 0.5,
+        '--map-item-list-message-opacity': 0,
+      }).then((result) => {
+        srcElement.classList.remove('saving-failed')
+        srcElement.style.removeProperty('--map-item-list-message-opacity')
+      })
       droppedMarker.getElement().classList.remove('leaflet-icon-mdi-icon-rotating')
       markerIconSpan.classList.replace('mdi-timer-sand-full', 'mdi-cloud-alert')
       droppedMarker.getElement().style.setProperty('--leaflet-icon-mdi-marker-color', 'var(--tblr-red)')
@@ -133,7 +174,6 @@ manager.monitor.addEventListener('dragend', (event) => {
       window.setTimeout(() => {
         droppedMarker.removeFrom(droppedMarkerLayer as any as L.Map)
       }, 10000)
-      console.log('marker', droppedMarker)
       droppedMarker.bindPopup(`Can't save device position: ${error.message}`).openPopup()
     })
     if (unlockMarkersButton.classList.contains('active')) {
@@ -158,10 +198,8 @@ manager.monitor.addEventListener('dragover', (event) => {
 
   if (operation.target?.id === droppable.id) {
     console.log('moved over map')
-    srcElement.style.filter = 'opacity(0)'
   } else {
     console.log('moved out of map')
-    srcElement.style.removeProperty('filter')
     drangDropMarker.remove()
   }
 })

@@ -4,7 +4,7 @@ import {DCIM} from "./netbox_types";
 import {C3navApiTypes} from "./c3nav_types";
 import {ListResponse, netBoxApi} from "./netbox_api";
 import {Map} from "./c3nav_map";
-import {MdiIcon} from "./leaflet_icons";
+import {MdiIcon, MdiIconOptions} from "./leaflet_icons";
 
 export class DeviceMarker {
   id: number | null = null
@@ -47,10 +47,10 @@ export class DeviceMarker {
     }
   }
 
-  setDevicePosition(pos: C3navPosition) {
+  setDevicePosition(pos: C3navPosition, skipMarkerUpdate?: boolean) {
     this.position = pos
     this.device = this.position.device
-    if (this.leafletMarker) {
+    if (this.leafletMarker && ! skipMarkerUpdate) {
       this.leafletMarker.setLatLng(L.GeoJSON.coordsToLatLng([this.position.x, this.position.y]))
     }
   }
@@ -102,11 +102,30 @@ export class DeviceMarker {
     }
     this.leafletMarker.bindPopup(popupBody)
 
-    this.leafletMarker.on('dragend', e => {
+    this.leafletMarker.on("dragstart", (e) => {
       if (!this.unlocked) {
         console.warn('marker dragged but not unlocked??? - ignoring')
         return
       }
+      this.leafletMarker.getElement().classList.remove('leaflet-icon-mdi-round')
+      this.leafletMarker.getElement().style.setProperty('--leaflet-icon-mdi-animation-duration', '0.25s');
+      (this.leafletMarker.getIcon().options as MdiIconOptions).markerStyle = 'marker'
+      console.log(this.leafletMarker.getIcon().options)
+    })
+
+    this.leafletMarker.on('dragend', e => {
+      console.log(this.leafletMarker.getIcon().options)
+      if (!this.unlocked) {
+        console.warn('marker dragged but not unlocked??? - ignoring')
+        return
+      }
+      window.setTimeout(() => {
+        (this.leafletMarker.getIcon().options as MdiIconOptions).markerStyle = 'round'
+        this.leafletMarker.getElement().addEventListener('transitionend', e => {
+          this.leafletMarker.getElement().style.removeProperty('--leaflet-icon-mdi-animation-duration')
+        }, {once: true})
+        this.leafletMarker.getElement().classList.add('leaflet-icon-mdi-round')
+      }, 250)
       this.updatePositionFromMarker()
       this.save().catch(error => {
         alert(`Can't update position: ${error.message}`)
@@ -154,7 +173,7 @@ export class DeviceMarker {
         if ('id' in response) {
           console.log(`marker saved, id:${response.id}`)
           this.id = response.id
-          this.setDevicePosition(response as C3navPosition)
+          this.setDevicePosition(response as C3navPosition, true)
         } else {
           // probably an error then
           console.error('error saving marker', response)
@@ -169,7 +188,7 @@ export class DeviceMarker {
       }).then(async (response: C3navPosition|ErrorResponse) => {
         if ('id' in response) {
           console.log(`marker with id:${response.id} updated`, response)
-          this.setDevicePosition(response)
+          this.setDevicePosition(response, true)
         } else {
           // probably an error then
           console.error('error updating marker position', response)
