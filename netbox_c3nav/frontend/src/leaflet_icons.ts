@@ -1,5 +1,7 @@
 import * as L from "leaflet"
 
+export type MdiIconMarkerStyles = 'marker' | 'round' | 'icon-only'
+
 export interface MdiIconOptions extends L.DivIconOptions {
   icon?: string
   iconOffset?: [string, string]
@@ -9,7 +11,7 @@ export interface MdiIconOptions extends L.DivIconOptions {
   color?: string
   markerSize?: string
   markerColor?: string
-  markerStyle?: 'marker' | 'round' | 'icon-only'
+  markerStyle?: MdiIconMarkerStyles
   markerStyleChangeAnimated?: boolean
   markerStyleChangeAnimationDuration?: string
   background?: boolean

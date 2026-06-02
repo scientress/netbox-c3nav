@@ -4,7 +4,7 @@ import {DCIM} from "./netbox_types";
 import {C3navApiTypes} from "./c3nav_types";
 import {ListResponse, netBoxApi} from "./netbox_api";
 import {Map} from "./c3nav_map";
-import {MdiIcon, MdiIconOptions} from "./leaflet_icons";
+import {MdiIcon, MdiIconMarkerStyles, MdiIconOptions} from "./leaflet_icons";
 
 export class DeviceMarker {
   id: number | null = null
@@ -238,7 +238,7 @@ export class DeviceMarker {
     this.draggingStyleElement?.remove()
   }
 
-  public replaceIcon(iconName: string, temporary: boolean = false) {
+  public setIcon(iconName: string, temporary: boolean = false): void {
     if (!this.leafletMarker) return
     if (!temporary) {
       (this.leafletMarker.getIcon() as MdiIcon).options.icon = iconName
@@ -251,29 +251,38 @@ export class DeviceMarker {
     markerIconSpan.classList.add(`mdi-${iconName}`)
   }
 
-  public resetIcon(temporary: boolean = false) {
-    this.replaceIcon(this.getIcon(), temporary)
+  public resetIcon(temporary: boolean = false): void {
+    this.setIcon(this.getIcon(), temporary)
   }
 
-  public setRotation(rotation: number|string, temporary: boolean = false) {
+  public getIconRotation(): string {
+    return (this.leafletMarker?.getIcon() as MdiIcon).options.iconRotation || ''
+  }
+
+  public setIconRotation(rotation: number|string, temporary: boolean = false): void {
     if (!this.leafletMarker) return
     if (typeof rotation !== 'string') {
       rotation = `${rotation}deg`
     }
     if (!temporary) {
-      (this.leafletMarker.getIcon() as MdiIcon).options.iconRotation = rotation
+      (this.leafletMarker.getIcon() as MdiIcon).options.iconRotation = rotation || undefined
     }
     const markerIconSpan: HTMLSpanElement = this.leafletMarker.getElement()?.querySelector('span.mdi')
     if (markerIconSpan) {
       let existingTransform = L.DomUtil.getStyle(markerIconSpan, 'transform') || ''
       existingTransform.replace(/rotate([^)]*?)/, '')
-      markerIconSpan.style.transform = `rotate(${rotation}) ${existingTransform}`
+      markerIconSpan.style.transform = rotation ? `rotate(${rotation}) ${existingTransform}` : existingTransform
     }
   }
 
-  public setRotating(rotating: boolean, temporary: boolean = false, force: boolean = false) {
+  public resetIconRotation(temporary: boolean = false): void {
     if (!this.leafletMarker) return
-    if (rotating && force || !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    this.setIconRotation(this.getIconRotation(), temporary)
+  }
+
+  public setRotating(rotating: boolean, temporary: boolean = false, force: boolean = false): void {
+    if (!this.leafletMarker) return
+    if (rotating && !force && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       rotating = false
     }
     if (!temporary) {
@@ -284,6 +293,69 @@ export class DeviceMarker {
     } else {
       this.leafletMarker.getElement()?.classList.remove('leaflet-icon-mdi-icon-rotating')
     }
+  }
+
+  public getIconColor(): string {
+    return (this.leafletMarker?.getIcon() as MdiIcon).options.color || ''
+  }
+
+  public setIconColor(color: string, temporary: boolean = false): void {
+    if (!this.leafletMarker) return
+    if (!temporary) {
+      (this.leafletMarker.getIcon() as MdiIcon).options.color = color || undefined
+    }
+    if (color) {
+      this.leafletMarker.getElement()?.style.setProperty('--leaflet-icon-mdi-icon-color', color)
+    } else {
+      this.leafletMarker.getElement()?.style.removeProperty('--leaflet-icon-mdi-icon-color')
+    }
+  }
+
+  public resetIconColor(temporary: boolean = false): void {
+    if (!this.leafletMarker) return
+    this.setIcon(this.getIconColor(), temporary)
+  }
+
+  public getMarkerColor(): string {
+    return (this.leafletMarker?.getIcon() as MdiIcon).options.markerColor || ''
+  }
+
+  public setMarkerColor(color: string, temporary: boolean = false): void {
+    if (!this.leafletMarker) return
+    if (!temporary) {
+      (this.leafletMarker.getIcon() as MdiIcon).options.color = color || undefined
+    }
+    if (color) {
+      this.leafletMarker.getElement()?.style.setProperty('--leaflet-icon-mdi-marker-color', color)
+    } else {
+      this.leafletMarker.getElement()?.style.removeProperty('--leaflet-icon-mdi-marker-color')
+    }
+  }
+
+  public resetMarkerColor(temporary: boolean = false): void {
+    if (!this.leafletMarker) return
+    this.setIcon(this.getMarkerColor(), temporary)
+  }
+
+  public getMarkerStyle(): MdiIconMarkerStyles {
+    return (this.leafletMarker?.getIcon() as MdiIcon).options.markerStyle || 'round'
+  }
+
+  public setMarkerStyle(style: MdiIconMarkerStyles, temporary: boolean = false): void {
+    if (!this.leafletMarker) return
+    if (!temporary) {
+      (this.leafletMarker.getIcon() as MdiIcon).options.markerStyle = style
+    }
+
+    this.leafletMarker.getElement()?.classList.remove('leaflet-icon-mdi-round', 'leaflet-icon-mdi-icon-only')
+    if (style !== 'marker') {
+      this.leafletMarker.getElement()?.classList.add(`leaflet-icon-mdi-${style}`)
+    }
+  }
+
+  public resetMarkerStyle(temporary: boolean = false): void {
+    if (!this.leafletMarker) return
+    this.setMarkerStyle(this.getMarkerStyle(), temporary)
   }
 }
 
