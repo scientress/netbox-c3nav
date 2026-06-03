@@ -125,7 +125,7 @@ export class DeviceMarker {
       title: this.device.display || this.device.name,
       icon: this.createLeafletIcon(),
     })
-
+    this.attachPopup()
     this.leafletMarker.on("dragstart", (e) => {
       if (!this.unlocked) {
         console.warn('marker dragged but not unlocked??? - ignoring')
