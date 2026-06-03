@@ -100,3 +100,19 @@ export interface ListResponse<Model = Object> {
   previous: string | null
   results: Model[]
 }
+
+export interface ExceptionResponse {
+  error: string
+  exception: string
+  netbox_version: string
+  python_version: string
+}
+
+export interface ErrorResponse {
+  detail: string
+}
+
+export interface IdempotencyErrorResponse<Model = Object> extends ErrorResponse {
+  status: 'conflict'
+  object: Model
+}

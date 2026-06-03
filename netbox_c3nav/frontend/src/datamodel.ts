@@ -1,8 +1,8 @@
-import {C3navOverlayBrief, C3navPosition, ErrorResponse, IdempotencyErrorResponse} from "./netbox_c3nav_types";
+import {C3navOverlayBrief, C3navPosition} from "./netbox_c3nav_types";
 import * as L from "leaflet";
 import {DCIM} from "./netbox_types";
 import {C3navApiTypes} from "./c3nav_types";
-import {ListResponse, netBoxApi} from "./netbox_api";
+import {ErrorResponse, ExceptionResponse, IdempotencyErrorResponse, ListResponse, netBoxApi} from "./netbox_api";
 import {Map} from "./c3nav_map";
 import {MdiIcon, MdiIconMarkerStyles, MdiIconOptions} from "./leaflet_icons";
 
@@ -221,7 +221,7 @@ export class DeviceMarker {
         last_updated: this.position.last_updated,
       })
 
-    return request.then(async (response: C3navPosition|ErrorResponse|IdempotencyErrorResponse) => {
+    return request.then(async (response: C3navPosition|ErrorResponse|IdempotencyErrorResponse<C3navPosition>|ExceptionResponse) => {
       if ('id' in response) {
         this.resetMarkerStyle()
         this.setRotating(false)
@@ -235,7 +235,7 @@ export class DeviceMarker {
         // probably an error then
         console.error(`error ${creating ? 'setting' : 'updating'} device position`, response)
         if ('status' in response && response.status === 'conflict') {
-          this.setDevicePosition(response.position)
+          this.setDevicePosition(response.object)
           return Promise.reject(new Error((response as IdempotencyErrorResponse).detail, {cause: 'idempotency-error'}))
         } else if ('detail' in response) {
           return Promise.reject(new Error((response as ErrorResponse).detail))
@@ -245,6 +245,10 @@ export class DeviceMarker {
             this.setDevicePosition(r.results[0])
           }
           return Promise.reject(new Error((response.device as any as string[]).join('<br>'), {cause: 'already-exists'}))
+        } else if ('error' in response) {
+          return Promise.reject(new Error((response as ExceptionResponse).error))
+        } else {
+          return Promise.reject(new Error(`Can't parse server response: ${JSON.stringify(response)}`))
         }
       }
       return this

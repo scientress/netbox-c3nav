@@ -15,7 +15,29 @@ from .serializers import DevicePositionSerializer, OverlaySerializer
 from ..c3nav import build_tile_url, get_tile_access_token
 
 
-class DevicePositionViewSet(NetBoxModelViewSet):
+class IdempotencyViewSetMixin(NetBoxModelViewSet):
+    def update(self, request, *args, **kwargs):
+        try:
+            return super().update(request, *args, **kwargs)
+        except IdempotencyException as e:
+            return Response({
+                'status': 'conflict',
+                'detail': e.detail,
+                'object': self.get_serializer(self.get_object()).data,
+            },
+            status=status.HTTP_409_CONFLICT,)
+
+    def perform_update(self, serializer: DevicePositionSerializer):
+        if 'last_updated' in self.request.data:
+            current_obj: models.DevicePosition = self.get_object()
+            current_obj_serializer = self.get_serializer(current_obj)
+            if current_obj_serializer.data['last_updated'] != self.request.data['last_updated']:
+                raise IdempotencyException(f'{current_obj._meta.verbose_name} was updated since it was last fetched '
+                                           f'from the server')
+        super().perform_update(serializer)
+
+
+class DevicePositionViewSet(IdempotencyViewSetMixin, NetBoxModelViewSet):
     queryset = models.DevicePosition.objects.prefetch_related('device')
     serializer_class = DevicePositionSerializer
     filterset_class = filtersets.DevicePositionFilterSet
@@ -40,13 +62,6 @@ class DevicePositionViewSet(NetBoxModelViewSet):
             },
             status=status.HTTP_409_CONFLICT,)
 
-    def perform_update(self, serializer: DevicePositionSerializer):
-        if 'last_updated' in self.request.data:
-            current_obj: models.DevicePosition = self.get_object()
-            current_obj_serializer = self.get_serializer(current_obj)
-            if current_obj_serializer.data['last_updated'] != self.request.data['last_updated']:
-                raise IdempotencyException('Device position was updated since it was last fetched from the server')
-        super().perform_update(serializer)
 
 class OverlayViewSet(NetBoxModelViewSet):
     queryset = models.Overlay.objects.prefetch_related('tags')

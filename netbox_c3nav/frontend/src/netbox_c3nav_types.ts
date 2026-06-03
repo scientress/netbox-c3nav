@@ -1,14 +1,5 @@
 import {DCIM} from "./netbox_types";
 
-export interface ErrorResponse {
-  detail: string,
-}
-
-export interface IdempotencyErrorResponse extends ErrorResponse {
-  status: 'conflict'
-  position: C3navPosition
-}
-
 export interface C3navPosition {
   id?: number;
   url?: string;
