@@ -2,12 +2,14 @@ import requests
 from django.http import HttpResponse
 from drf_spectacular.utils import extend_schema
 from netbox.api.viewsets import NetBoxModelViewSet
+from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.permissions import BasePermission
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from .exceptions import IdempotencyException
 from .. import filtersets, models
 from .serializers import DevicePositionSerializer, OverlaySerializer
 from ..c3nav import build_tile_url, get_tile_access_token
@@ -26,6 +28,25 @@ class DevicePositionViewSet(NetBoxModelViewSet):
             'features': [dp.geojson for dp in qs],
         })
 
+    def update(self, request, *args, **kwargs):
+        time.sleep(1.5)
+        try:
+            return super().update(request, *args, **kwargs)
+        except IdempotencyException as e:
+            return Response({
+                'status': 'conflict',
+                'detail': e.detail,
+                'position': self.get_serializer(self.get_object()).data,
+            },
+            status=status.HTTP_409_CONFLICT,)
+
+    def perform_update(self, serializer: DevicePositionSerializer):
+        if 'last_updated' in self.request.data:
+            current_obj: models.DevicePosition = self.get_object()
+            current_obj_serializer = self.get_serializer(current_obj)
+            if current_obj_serializer.data['last_updated'] != self.request.data['last_updated']:
+                raise IdempotencyException('Device position was updated since it was last fetched from the server')
+        super().perform_update(serializer)
 
 class OverlayViewSet(NetBoxModelViewSet):
     queryset = models.Overlay.objects.prefetch_related('tags')

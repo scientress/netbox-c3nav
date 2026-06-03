@@ -1,4 +1,4 @@
-import {C3navOverlayBrief, C3navPosition, ErrorResponse} from "./netbox_c3nav_types";
+import {C3navOverlayBrief, C3navPosition, ErrorResponse, IdempotencyErrorResponse} from "./netbox_c3nav_types";
 import * as L from "leaflet";
 import {DCIM} from "./netbox_types";
 import {C3navApiTypes} from "./c3nav_types";
@@ -153,9 +153,11 @@ export class DeviceMarker {
       }, {once: true})
       const previousPosition: [number, number] = [this.position.x, this.position.y]
       this.updatePositionFromMarker()
-      this.save().catch(error => {
-        [this.position.x, this.position.y] = previousPosition
-        this.leafletMarker.setLatLng([this.position.y, this.position.x])
+      this.save().catch((error: Error) => {
+        if (error.cause !== 'idempotency-error') {
+          [this.position.x, this.position.y] = previousPosition
+          this.leafletMarker.setLatLng([this.position.y, this.position.x])
+        }
         this.clearError(5).then(() => {
           console.log('cleared error')
         })
@@ -216,9 +218,10 @@ export class DeviceMarker {
       netBoxApi.patch(`plugins/c3nav/positions/${this.id}/`, {
         x: this.position.x,
         y: this.position.y,
+        last_updated: this.position.last_updated,
       })
 
-    return request.then(async (response: C3navPosition|ErrorResponse) => {
+    return request.then(async (response: C3navPosition|ErrorResponse|IdempotencyErrorResponse) => {
       if ('id' in response) {
         this.resetMarkerStyle()
         this.setRotating(false)
@@ -231,6 +234,10 @@ export class DeviceMarker {
       } else {
         // probably an error then
         console.error(`error ${creating ? 'setting' : 'updating'} device position`, response)
+        if ('status' in response && response.status === 'conflict') {
+          this.setDevicePosition(response.position)
+          return Promise.reject(new Error((response as IdempotencyErrorResponse).detail, {cause: 'idempotency-error'}))
+        }
         return Promise.reject(new Error((response as ErrorResponse).detail))
       }
       return this
