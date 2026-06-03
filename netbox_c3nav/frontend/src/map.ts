@@ -151,7 +151,8 @@ manager.monitor.addEventListener('dragend', (event) => {
     marker.setPosition(mapPos, map.getCurrentLevel(), true)
     console.log('created new device marker, saving marker...', marker)
 
-    marker.save().then((success) =>{
+    // ToDo: refactor this for less duplicated code
+    marker.save(true).then((success) =>{
       markers.push(marker)
       srcElement.classList.replace('saving', 'saved')
       gsap.to(srcElement, {
@@ -167,7 +168,35 @@ manager.monitor.addEventListener('dragend', (event) => {
         marker.recreateMarker(map)
       })
     }).catch((error: Error) => {
+      const alreadyExists = error.cause === 'already-exists';
       srcElement.classList.replace('saving', 'saving-failed')
+      if (alreadyExists) {
+        markers.push(marker)
+        gsap.to(srcElement, {
+          delay: 10,
+          duration: 0.5,
+          height: '0',
+          'padding-top': '0',
+          'padding-bottom': '0',
+          display: 'none',
+          overflow: 'hidden',
+        }).then((result) => {
+          srcElement.remove()
+          let markerRecreated: boolean = false
+          const recreateMarker = () => {
+            if (markerRecreated) return
+            markerRecreated = this
+            marker.recreateMarker(map)
+          }
+          const fallBackTimeout = window.setTimeout(recreateMarker, 1000)
+          droppedMarker.getElement().addEventListener('transitionend', e => {
+            window.clearTimeout(fallBackTimeout)
+            recreateMarker()
+          }, {once: true})
+          marker.clearError().then()
+        })
+        return
+      }
       const messageAnimation = gsap.to(srcElement, {
         delay: 2,
         duration: 0.5,

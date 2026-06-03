@@ -158,9 +158,6 @@ export class DeviceMarker {
           [this.position.x, this.position.y] = previousPosition
           this.leafletMarker.setLatLng([this.position.y, this.position.x])
         }
-        this.clearError(5).then(() => {
-          console.log('cleared error')
-        })
       })
     })
 
@@ -187,22 +184,25 @@ export class DeviceMarker {
   }
 
   public recreateMarker(map: Map) {
-    console.log('recreating device marker', this)
-    this.inErrorState = false
     if (this.leafletMarker === null) return
-    //this.leafletMarker.remove()
-    // because marker.remove() doesn't work properly
-    this.leafletMarker.removeFrom(map.markerClusterGroups[this.position.level_id] as any as L.Map)
-    this.leafletMarker = null
-    this.attach(map.markerClusterGroups[this.position.level_id])
+    console.log('recreating device marker', this)
+    this.clearError().then(() => {
+      //this.leafletMarker.remove()
+      // because marker.remove() doesn't work properly
+      this.leafletMarker.removeFrom(map.markerClusterGroups[this.position.level_id] as any as L.Map)
+      this.leafletMarker.removeFrom(map.overlayGroups[this.position.level_id] as any as L.Map)
+      this.leafletMarker = null
+      this.attach(map.markerClusterGroups[this.position.level_id])
+    })
   }
 
-  public async save(): Promise<DeviceMarker|Error> {
+  public async save(noAutoCleanError: boolean = false): Promise<DeviceMarker|Error> {
     const creating:boolean = this.id === null
     // temporarily replace the icon with a sand timer icon while the position is saved
     this.uiFeedbackActive = true
     this.setIcon('timer-sand-full', creating)
     this.setRotating(true)
+    const wasUnlocked: boolean = this.unlocked
     this.lock()
 
     const request = (creating) ?
@@ -237,8 +237,15 @@ export class DeviceMarker {
         if ('status' in response && response.status === 'conflict') {
           this.setDevicePosition(response.position)
           return Promise.reject(new Error((response as IdempotencyErrorResponse).detail, {cause: 'idempotency-error'}))
+        } else if ('detail' in response) {
+          return Promise.reject(new Error((response as ErrorResponse).detail))
+        } else if (creating && 'device' in response && typeof response.device === 'object') {
+          const r = await netBoxApi.get(`plugins/c3nav/positions/?device=${this.device.id}`) as ListResponse<C3navPosition>
+          if (r.results.length === 1) {
+            this.setDevicePosition(r.results[0])
+          }
+          return Promise.reject(new Error((response.device as any as string[]).join('<br>'), {cause: 'already-exists'}))
         }
-        return Promise.reject(new Error((response as ErrorResponse).detail))
       }
       return this
     }).catch((error: Error) => {
@@ -248,9 +255,12 @@ export class DeviceMarker {
       this.setIconColor('var(--tblr-red-fg)', false)
       this.setMarkerColor('var(--tblr-red)', false)
       this.leafletMarker.bindPopup(`Error ${creating ? 'setting' : 'updating'} device position:<br>${error.message}`).openPopup()
+      if (!noAutoCleanError) {
+        this.clearError(5).then()
+      }
       return Promise.reject(error)
     }).finally(()=>{
-      this.unlock()
+      if (wasUnlocked) this.unlock()
     })
   }
 
