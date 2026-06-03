@@ -79,13 +79,13 @@ export class MdiIcon extends L.DivIcon {
     const markerDiv: HTMLDivElement = document.createElement('div');
     markerDiv.className = 'leaflet-icon-mdi-marker';
     if (this.options.markerColor) {
-      markerDiv.style.backgroundColor = this.options.markerColor;
+      div.style.setProperty('--leaflet-icon-mdi-marker-color', this.options.markerColor)
     }
 
     const iconSpan: HTMLSpanElement = document.createElement('span');
     iconSpan.classList.add('leaflet-icon-mdi-icon', 'mdi', `mdi-${this.options.icon}`);
     if (this.options.color){
-      iconSpan.style.color = this.options.color;
+      div.style.setProperty('--leaflet-icon-mdi-icon-color', this.options.color);
     }
     if (this.options.iconRotation) {
       iconSpan.style.transform = `rotate(${this.options.iconRotation}) ${L.DomUtil.getStyle(iconSpan, 'transform') || ''}`

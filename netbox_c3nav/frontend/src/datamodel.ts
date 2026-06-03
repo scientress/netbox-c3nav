@@ -6,6 +6,21 @@ import {ListResponse, netBoxApi} from "./netbox_api";
 import {Map} from "./c3nav_map";
 import {MdiIcon, MdiIconMarkerStyles, MdiIconOptions} from "./leaflet_icons";
 
+class FeedbackClearingTimerHandle {
+  resolveFunc: (value: void | PromiseLike<void>) => void
+  rejectFunc: (value: void | PromiseLike<void>) => void
+  timeoutId: number
+
+  constructor(resolveFunc: (value: void | PromiseLike<void>) => void,
+              rejectFunc: (value: void | PromiseLike<void>) => void,
+              timeoutHandle: number) {
+    this.resolveFunc = resolveFunc
+    this.rejectFunc = rejectFunc
+    this.timeoutId = timeoutHandle
+  }
+
+}
+
 export class DeviceMarker {
   id: number | null = null
   position: C3navPosition | null = null
@@ -13,7 +28,11 @@ export class DeviceMarker {
   device: DCIM.DeviceBrief | DCIM.Device | null = null
   unlocked: boolean = false
   draggingStyleElement?: HTMLStyleElement
-  inErrorState: boolean = false
+  private uiFeedbackActive: boolean = false
+  private inErrorState: boolean = false
+  private uiFeedbackClearingTimeoutHandle: FeedbackClearingTimerHandle
+  private errorStateClearingTimeoutHandle: FeedbackClearingTimerHandle
+
 
   constructor(idOrDevicePosition?: number | C3navPosition, marker?: L.Marker) {
     if (typeof idOrDevicePosition === "number") {
@@ -112,6 +131,11 @@ export class DeviceMarker {
         console.warn('marker dragged but not unlocked??? - ignoring')
         return
       }
+      if (this.inErrorState) {
+        this.clearError()
+      } else if (this.uiFeedbackActive) {
+        this.clearUiFeedback()
+      }
       this.injectDraggingStyle()
       // needs to be permanente because leaflet re-creates the marker icon
       this.setMarkerStyle('marker', false)
@@ -131,17 +155,13 @@ export class DeviceMarker {
       this.updatePositionFromMarker()
       this.save().catch(error => {
         [this.position.x, this.position.y] = previousPosition
+        this.leafletMarker.setLatLng([this.position.y, this.position.x])
         this.clearError(5).then(() => {
           console.log('cleared error')
         })
       })
     })
 
-  }
-
-  private getIcon(): string {
-    // ToDo: get Icon for device-role
-    return 'hexagon-multiple'
   }
 
   private createLeafletIcon(options?: MdiIconOptions) {
@@ -178,8 +198,10 @@ export class DeviceMarker {
   public async save(): Promise<DeviceMarker|Error> {
     const creating:boolean = this.id === null
     // temporarily replace the icon with a sand timer icon while the position is saved
+    this.uiFeedbackActive = true
     this.setIcon('timer-sand-full', creating)
     this.setRotating(true)
+    this.lock()
 
     const request = (creating) ?
       // new marker
@@ -203,6 +225,9 @@ export class DeviceMarker {
         this.setIcon('check-bold', true)
         console.log(`marker with id:${response.id} ${creating ? 'created' : 'updated'}`, response)
         this.setDevicePosition(response, true)
+        this.clearUiFeedback(2).then(() => {
+          console.log('save ui feedback cleared')
+        })
       } else {
         // probably an error then
         console.error(`error ${creating ? 'setting' : 'updating'} device position`, response)
@@ -213,16 +238,71 @@ export class DeviceMarker {
       this.inErrorState = true
       this.setRotating(false)
       this.setIcon('cloud-alert', false)
-      this.setIconColor('var(--tblr-red-fg)', true)
-      this.setMarkerColor('var(--tblr-red)', true)
+      this.setIconColor('var(--tblr-red-fg)', false)
+      this.setMarkerColor('var(--tblr-red)', false)
       this.leafletMarker.bindPopup(`Error ${creating ? 'setting' : 'updating'} device position:<br>${error.message}`).openPopup()
       return Promise.reject(error)
+    }).finally(()=>{
+      this.unlock()
     })
   }
 
+  public async clearUiFeedback(delay?: number): Promise<void> {
+    if (!this.uiFeedbackActive) return Promise.resolve()
+    const timeoutHandle: FeedbackClearingTimerHandle = this.uiFeedbackClearingTimeoutHandle
+    if (timeoutHandle) {
+      this.uiFeedbackClearingTimeoutHandle = undefined
+      window.clearTimeout(timeoutHandle.timeoutId)
+      console.log('canceling timeout of previously scheduled ui feedback clearing')
+    }
+    const clearUiFeedback = (resolve: (value: void | PromiseLike<void>) => void): void => {
+      this.uiFeedbackClearingTimeoutHandle = undefined
+      if (!this.uiFeedbackActive) return resolve()
+      console.log('clearing ui feedback')
+      this.uiFeedbackActive = false
+      this.resetIcon()
+      this.resetIconColor()
+      this.resetMarkerColor()
+      this.resetMarkerStyle()
+      resolve()
+    }
+    const promise: Promise<void> = (typeof delay === 'number' && delay > 0) ?
+      new Promise((resolve, reject) => {
+        console.log(`scheduling ui feedback clearing in ${delay}s`)
+        this.uiFeedbackClearingTimeoutHandle = new FeedbackClearingTimerHandle(
+          resolve,
+          reject,
+          setTimeout(() => {
+            clearUiFeedback(resolve)
+          }, delay * 1000)
+        )
+      })
+    :
+      new Promise(resolve => {
+        console.log('immediately clearing ui feedback')
+        clearUiFeedback(resolve)
+      })
+
+    if (timeoutHandle) {
+      promise.then(() => {
+        console.log('resolving promise of previously scheduled ui feedback clearing')
+        timeoutHandle.resolveFunc()
+      })
+    }
+    return promise
+  }
+
   public async clearError(delay?: number): Promise<void> {
+    if (!this.inErrorState) return Promise.resolve()
+    const timeoutHandle: FeedbackClearingTimerHandle = this.errorStateClearingTimeoutHandle
+    if (timeoutHandle) {
+      this.errorStateClearingTimeoutHandle = undefined
+      window.clearTimeout(timeoutHandle.timeoutId)
+      console.log('canceling timeout of previously scheduled error state clearing')
+    }
     const clearError = (resolve: (value: void | PromiseLike<void>) => void): void => {
-      if (!this.inErrorState) return
+      if (!this.inErrorState) return resolve()
+      this.inErrorState = false
       console.log('clearing error on device marker', this)
 
       const markerPos: L.LatLng = this.leafletMarker.getLatLng()
@@ -244,18 +324,33 @@ export class DeviceMarker {
       }
       this.leafletMarker.closePopup()
       this.attachPopup()
-      this.resetIcon()
-      this.resetIconColor()
-      this.resetMarkerColor()
-      this.resetMarkerStyle()
+      resolve(this.clearUiFeedback())
     }
-    if (typeof delay === 'number' && delay > 0) {
-      return new Promise(resolve => setTimeout(() => {
+
+    const promise: Promise<void> = (typeof delay === 'number' && delay > 0) ?
+      new Promise((resolve, reject) => {
+        console.log(`scheduling error state clearing in ${delay}s`)
+        this.errorStateClearingTimeoutHandle = new FeedbackClearingTimerHandle(
+          resolve,
+          reject,
+          setTimeout(() => {
+            clearError(resolve)
+          }, delay * 1000)
+        )
+      })
+    :
+      new Promise(resolve => {
+        console.log('immediately clearing error state')
         clearError(resolve)
-      }, delay * 1000))
-    } else {
-      return new Promise(resolve => clearError)
+      })
+
+    if (timeoutHandle) {
+      promise.then(() => {
+        console.log('resolving promise of previously scheduled error state clearing')
+        timeoutHandle.resolveFunc()
+      })
     }
+    return promise
   }
 
   public unlock() {
@@ -287,6 +382,11 @@ export class DeviceMarker {
     this.draggingStyleElement?.remove()
   }
 
+  private getIcon(): string {
+    // ToDo: get icon for device-role
+    return 'hexagon-multiple'
+  }
+
   public setIcon(iconName: string, temporary: boolean = false): void {
     if (!this.leafletMarker) return
     if (!temporary) {
@@ -305,6 +405,7 @@ export class DeviceMarker {
   }
 
   public getIconRotation(): string {
+    // ToDo: get icon rotation for device-role
     return (this.leafletMarker?.getIcon() as MdiIcon).options.iconRotation || ''
   }
 
@@ -345,7 +446,8 @@ export class DeviceMarker {
   }
 
   public getIconColor(): string {
-    return (this.leafletMarker?.getIcon() as MdiIcon).options.color || ''
+    // ToDo: get icon color for device-role
+    return ''
   }
 
   public setIconColor(color: string, temporary: boolean = false): void {
@@ -366,7 +468,8 @@ export class DeviceMarker {
   }
 
   public getMarkerColor(): string {
-    return (this.leafletMarker?.getIcon() as MdiIcon).options.markerColor || ''
+    // ToDo: get marker color for device-role
+    return ''
   }
 
   public setMarkerColor(color: string, temporary: boolean = false): void {
@@ -379,6 +482,7 @@ export class DeviceMarker {
     } else {
       this.leafletMarker.getElement()?.style.removeProperty('--leaflet-icon-mdi-marker-color')
     }
+    console.log('setMarkerColor', color, this.leafletMarker.getIcon().options)
   }
 
   public resetMarkerColor(temporary: boolean = false): void {
@@ -387,6 +491,7 @@ export class DeviceMarker {
   }
 
   public getMarkerStyle(): MdiIconMarkerStyles {
+    // ToDo: get marker style for device-role
     return 'round'
   }
 
