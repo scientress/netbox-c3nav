@@ -50,18 +50,6 @@ class DevicePositionViewSet(IdempotencyViewSetMixin, NetBoxModelViewSet):
             'features': [dp.geojson for dp in qs],
         })
 
-    def update(self, request, *args, **kwargs):
-        time.sleep(1.5)
-        try:
-            return super().update(request, *args, **kwargs)
-        except IdempotencyException as e:
-            return Response({
-                'status': 'conflict',
-                'detail': e.detail,
-                'position': self.get_serializer(self.get_object()).data,
-            },
-            status=status.HTTP_409_CONFLICT,)
-
 
 class OverlayViewSet(NetBoxModelViewSet):
     queryset = models.Overlay.objects.prefetch_related('tags')
