@@ -70,6 +70,9 @@ export class DeviceMarker {
 
   setDevicePosition(pos: C3navPosition, skipMarkerUpdate?: boolean) {
     this.position = pos
+    if (!this.id) {
+      this.id = pos.id
+    }
     this.device = this.position.device
     if (this.leafletMarker && ! skipMarkerUpdate) {
       this.leafletMarker.setLatLng(L.GeoJSON.coordsToLatLng([this.position.x, this.position.y]))
