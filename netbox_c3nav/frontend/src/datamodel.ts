@@ -110,9 +110,9 @@ export class DeviceMarker {
     let popupBody = ""
     const displayURL = this.getDeviceDisplayURL()
     if (displayURL) {
-      popupBody += `<a href="${displayURL}" target="_blank">${this.device.name}</a>`
+      popupBody += `<a href="${displayURL}" target="_blank">${this.device.display || this.device.name}</a>`
     } else {
-      popupBody += this.device.name
+      popupBody += this.device.display || this.device.name
     }
     if (this.device.description) {
       popupBody += `<br><span class="text-secondary">${this.device.description}</span>`
