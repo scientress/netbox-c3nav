@@ -57,12 +57,13 @@ export class Map {
 
   public async bind(element: HTMLDivElement) {
     this.container = element;
-    if (this.apiKey) {
-      await this.api.get('updates/fetch/')
-      window.setInterval(() => {
-        this.api.get('updates/fetch')
-      }, 20000)
-    }
+    // setting the tile access cookie like that doesn't work, so we don't need this at the moment
+    // if (this.apiKey) {
+    //   await this.api.get('updates/fetch/')
+    //   window.setInterval(() => {
+    //     this.api.get('updates/fetch')
+    //   }, 20000)
+    // }
     this.map_settings = await this.api.get('map/settings/');
     const raw_bounds: C3navApiTypes.BoundsSchema = await this.api.get('map/bounds/')
     this.map_bounds = GeoJSON.coordsToLatLngs(raw_bounds)
