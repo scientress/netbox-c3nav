@@ -85,6 +85,12 @@ div.map-item-list {
 
 /* leaflet */
 
+/* custom pane(s) */
+
+.leaflet-background-pane {
+  z-index: 100;
+}
+
 /* all controls */
 
 .leaflet-control {

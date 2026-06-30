@@ -78,6 +78,7 @@ export class Map {
       zoomControl: false,
       attributionControl: true,
     });
+    this.map.createPane('backgroundPane')
     this.map.fitBounds(GeoJSON.coordsToLatLngs(this.map_settings.initial_bounds))
 
     if (!this.tileserverUrl) {

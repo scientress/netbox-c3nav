@@ -13,5 +13,5 @@ class OverlayTable(NetBoxTable):
     class Meta(NetBoxTable.Meta):
         model = Overlay
         fields = ("pk", "id", "name", "description", "file", "external_url", "c3nav_source_id", "level_index", "bounds",
-                  "actions")
-        default_columns = ("name", "description", "file", "external_url", "level_index")
+                  'is_background', 'opacity', 'zindex', "actions")
+        default_columns = ("name", "description", "file", "external_url", "level_index", "is_background")

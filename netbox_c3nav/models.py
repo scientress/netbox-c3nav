@@ -1,4 +1,5 @@
 from django.core.cache import cache
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.db.models import Q
 from django.urls import reverse
@@ -56,12 +57,20 @@ class Overlay(NetBoxModel):
     c3nav_source_id = models.PositiveIntegerField(verbose_name=_('c3nav source id'), blank=True, null=True, unique=True)
 
     level_index = models.CharField(max_length=20, verbose_name=_('level index'), blank=True, null=True,
-                                   help_text=_('limits the overlay to a specific level'))
+                                   help_text=_('Limits the overlay to a specific level.'))
 
     bottom = models.DecimalField(_('bottom coordinate'), max_digits=6, decimal_places=2)
     left = models.DecimalField(_('left coordinate'), max_digits=6, decimal_places=2)
     top = models.DecimalField(_('top coordinate'), max_digits=6, decimal_places=2)
     right = models.DecimalField(_('right coordinate'), max_digits=6, decimal_places=2)
+
+    is_background = models.BooleanField(_('background'), default=False,
+                                        help_text=_('Render the overlay as map background behind the c3nav tiles.'))
+    opacity = models.FloatField(_('opacity'), default=None, blank=True, null=True,
+                                help_text=_('Custom opacity for the overlay. Leave blank to use the default.'),
+                                validators=[MinValueValidator(0.0), MaxValueValidator(1.0)],)
+    zindex = models.IntegerField(_('z-index'), blank=True, null=True,
+                                help_text=_('Custom z-index for the overlay. Leave blank to use the default (400).'))
 
     class Meta:
         ordering = ('level_index', 'name')
@@ -76,6 +85,11 @@ class Overlay(NetBoxModel):
                         Q(file='', external_url__isnull=True, c3nav_source_id__isnull=False)
                 ),
                 violation_error_message=_('Can either use a file, external URL or c3nav source id'),
+            ),
+            models.CheckConstraint(
+                name='opacity-limits',
+                condition=Q(opacity__isnull=True) | Q(opacity__gte=0.0) & Q(opacity__lte=1.0),
+                violation_error_message=_('Opacity must be between 0 and 1 or null'),
             )
         ]
 

@@ -1,6 +1,7 @@
 import * as L from "leaflet"
 import {C3navOverlayBrief} from "./netbox_c3nav_types";
 import {C3navApiTypes} from "./c3nav_types";
+import {ImageOverlayOptions, TileLayerOptions} from "leaflet";
 
 export interface LevelControlOptions extends L.ControlOptions {
   baseUrl: string
@@ -59,7 +60,7 @@ export class LevelControl extends L.Control {
   }
 
   createTileLayer(id: string): L.TileLayer {
-      const urlPattern= this.options.baseUrl +  `/${id}/{z}/{x}/{y}/0.webp`
+      const urlPattern= this.options.baseUrl +  `/${id}/{z}/{x}/{y}/-1.webp`
       return L.tileLayer(urlPattern, {
           minZoom: -2,
           maxNativeZoom: 5,
@@ -300,9 +301,10 @@ export class OverlayControl extends L.Control {
     }
 
     const bounds = L.GeoJSON.coordsToLatLngs(overlay.bounds)
-    const options = {
-      opacity: 0.3,
-      zIndex: 300,
+    const options: TileLayerOptions | ImageOverlayOptions = {
+      opacity: overlay.opacity ?? (overlay.is_background ? 1.0 : 0.3),
+      zIndex: overlay.zindex ?? undefined,
+      pane: overlay.is_background ? 'backgroundPane' : 'overlayPane',
     }
 
     let layer = null

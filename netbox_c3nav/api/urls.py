@@ -9,7 +9,7 @@ register_converter(converters.SignedIntConverter, 'c3nav_sint')
 register_converter(converters.TileFileExtConverter, 'c3nav_img_ext')
 
 urlpatterns = [
-    path('tiles/<int:level>/<c3nav_sint:zoom>/<c3nav_sint:x>/<c3nav_sint:y>/<int:theme>.<c3nav_img_ext:ext>',
+    path('tiles/<int:level>/<c3nav_sint:zoom>/<c3nav_sint:x>/<c3nav_sint:y>/<c3nav_sint:theme>.<c3nav_img_ext:ext>',
          views.TileProxyView.as_view(), name='tiles-proxy'),
 ]
 
