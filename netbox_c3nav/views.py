@@ -5,9 +5,19 @@ from django.urls import reverse
 from django.views import View
 from netbox.plugins import get_plugin_config
 from netbox.views import generic
+from utilities.views import register_model_view, GetRelatedModelsMixin
 
 from . import filtersets, forms, models, tables
 
+__all__ = (
+    'MapView',
+    'OverlayDetailView',
+    'OverlayListView',
+    'OverlayEditView',
+    'OverlayDeleteView',
+    'OverlayBulkImportView',
+    'OverlayBulkEditView',
+)
 
 class MapView(PermissionRequiredMixin, View):
     permission_required = ("dcim.view_site", "dcim.view_device", 'netbox_c3nav.view_deviceposition')
@@ -47,20 +57,53 @@ class MapView(PermissionRequiredMixin, View):
         )
 
 
-class OverlayDetailView(generic.ObjectView):
+@register_model_view(models.Overlay)
+class OverlayDetailView(GetRelatedModelsMixin, generic.ObjectView):
     queryset = models.Overlay.objects.all()
 
 
+@register_model_view(models.Overlay, 'list', path='', detail=False)
 class OverlayListView(generic.ObjectListView):
     queryset = models.Overlay.objects.all()
     table = tables.OverlayTable
     filterset = filtersets.OverlayFilterSet
+    filterset_form = forms.OverlayFilterForm
 
 
+@register_model_view(models.Overlay, 'add', detail=False)
+@register_model_view(models.Overlay, 'edit')
 class OverlayEditView(generic.ObjectEditView):
     queryset = models.Overlay.objects.all()
     form = forms.OverlayForm
 
 
+@register_model_view(models.Overlay, 'delete')
 class OverlayDeleteView(generic.ObjectDeleteView):
     queryset = models.Overlay.objects.all()
+
+
+@register_model_view(models.Overlay, 'bulk_import', path='import', detail=False)
+class OverlayBulkImportView(generic.BulkImportView):
+    queryset = models.Overlay.objects.all()
+    model_form = forms.OverlayBulkImportForm
+
+
+@register_model_view(models.Overlay, 'bulk_edit', path='edit', detail=False)
+class OverlayBulkEditView(generic.BulkEditView):
+    queryset = models.Overlay.objects.all()
+    form = forms.OverlayBulkEditForm
+    table = tables.OverlayTable
+    filterset = filtersets.OverlayFilterSet
+
+
+@register_model_view(models.Overlay, 'bulk_rename', path='rename', detail=False)
+class OverlayBulkRenameView(generic.BulkRenameView):
+    queryset = models.Overlay.objects.all()
+    filterset = filtersets.OverlayFilterSet
+
+
+@register_model_view(models.Overlay, 'bulk_delete', path='delete', detail=False)
+class OverlayBulkDeleteView(generic.BulkDeleteView):
+    queryset = models.Overlay.objects.all()
+    filterset = filtersets.OverlayFilterSet
+    table = tables.OverlayTable

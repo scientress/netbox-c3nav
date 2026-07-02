@@ -44,6 +44,12 @@ menu = PluginMenu(
                         title='Add',
                         icon_class='mdi mdi-plus-thick',
                         permissions=('netbox_c3nav.add_overlay', 'netbox_c3nav.change_overlay'),
+                    ),
+                    PluginMenuButton(
+                        link='plugins:netbox_c3nav:overlay_bulk_import',
+                        title='Import',
+                        icon_class='mdi mdi-upload',
+                        permissions=('netbox_c3nav.add_overlay', 'netbox_c3nav.change_overlay'),
                     )
                 ]
             ),

@@ -9,6 +9,11 @@ from netbox.plugins import get_plugin_config
 
 from netbox_c3nav.utils import file_upload_path
 
+__all__ = (
+    'DevicePosition',
+    'Overlay',
+)
+
 
 class DevicePosition(ChangeLoggedModel):
     device = models.OneToOneField('dcim.Device', on_delete=models.CASCADE, verbose_name=_('device'))
