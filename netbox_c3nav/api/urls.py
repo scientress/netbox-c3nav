@@ -1,5 +1,8 @@
 from django.urls import path, register_converter
+
 from netbox.api.routers import NetBoxRouter
+from netbox.plugins import get_plugin_config
+
 from . import views
 from .. import converters
 
