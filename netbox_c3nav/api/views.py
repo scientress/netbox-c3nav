@@ -2,6 +2,7 @@ import requests
 from django.http import HttpResponse
 from drf_spectacular.utils import extend_schema
 from netbox.api.viewsets import NetBoxModelViewSet
+from netbox.plugins import get_plugin_config
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.permissions import BasePermission
@@ -71,6 +72,14 @@ class TileProxyView(APIView):
         return "TileProxy"
 
     def get(self, request: Request, level: int, zoom: int, x: int, y: int, theme:int, ext:str, format=None, **kwargs):
+        if get_plugin_config('netbox_c3nav', 'proxy_tiles_x_accel', False):
+            x_accel_location = get_plugin_config('netbox_c3nav', 'proxy_tiles_x_accel_location', '')
+            if x_accel_location and not x_accel_location.endswith('/'):
+                x_accel_location = x_accel_location + '/'
+            return HttpResponse('', status=status.HTTP_200_OK, headers={
+                'X-Accel-Redirect': x_accel_location + build_tile_url(level, zoom, x, y, theme, ext, path_only=True),
+                'X-C3nav-Tile-Access-Token': get_tile_access_token(),
+            })
         r = requests.get(
             build_tile_url(level, zoom, x, y, theme, ext),
             headers={

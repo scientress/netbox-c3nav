@@ -39,6 +39,6 @@ def get_tile_access_token() -> str:
 
     return tile_access_token
 
-def build_tile_url(level: int, zoom: int, x: int, y: int, theme:int, ext:str) -> str:
-    tile_server = get_tile_server()
+def build_tile_url(level: int, zoom: int, x: int, y: int, theme:int, ext:str, path_only: bool = False) -> str:
+    tile_server = '' if path_only else get_tile_server()
     return f'{tile_server}/{level}/{zoom}/{x}/{y}/{theme}.{ext}'

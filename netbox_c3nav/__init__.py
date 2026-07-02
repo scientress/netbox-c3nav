@@ -19,6 +19,8 @@ class NetBoxC3navConfig(PluginConfig):
         'api_key': 'anonymous',
         'frontend_api_key': None,
         'proxy_tiles': False,
+        'proxy_tiles_x_accel': False,
+        'proxy_tiles_x_accel_location': '',
     }
 
 config = NetBoxC3navConfig
