@@ -1,52 +1,60 @@
 {% extends 'generic/object.html' %}
+{% load helpers %}
+{% load plugins %}
 {% load render_table from django_tables2 %}
+{% load i18n %}
 
 {% block content %}
   <div class="row mb-3">
     <div class="col col-md-6">
       <div class="card">
 
-        <h5 class="card-header">Overlay</h5>
+        <h5 class="card-header">{% trans "Overlay" %}</h5>
 
         <table class="table table-hover attr-table">
           <tr>
-            <th scope="row">Name</th>
+            <th scope="row">{% trans "Name" %}</th>
             <td>{{ object.name }}</td>
           </tr>
           <tr>
-            <th scope="row">Description</th>
+            <th scope="row">{% trans "Description" %}</th>
             <td>{{ object.description }}</td>
           </tr>
           {% if object.file %}
           <tr>
-            <th scope="row">File</th>
+            <th scope="row">{% trans "File" %}</th>
             <td><a href="{{ object.file.url }}">{{ object.file }}</a></td>
           </tr>
           {% elif object.external_url %}
           <tr>
-            <th scope="row">External URL</th>
+            <th scope="row">{% trans "External URL" %}</th>
             <td>{{ object.external_url }}</td>
           </tr>
           {% elif object.c3nav_source_id %}
           <tr>
-            <th scope="row">c3nav Source ID</th>
+            <th scope="row">{% trans "c3nav Source ID" %}</th>
             <td>{{ object.c3nav_source_id }}</td>
           </tr>
           {% endif %}
           <tr>
-            <th scope="row">Level_Index</th>
+            <th scope="row">{% trans "Level_Index" %}</th>
             <td>{{ object.level_index | default:"" }}</td>
           </tr>
           <tr>
-            <th scope="row">Bounds</th>
+            <th scope="row">{% trans "Bounds" %}</th>
             <td>{{ object.bounds }}</td>
           </tr>
         </table>
       </div>
       {% include 'inc/panels/custom_fields.html' %}
+      {% plugin_left_page object %}
     </div>
     <div class="col col-md-6">
       {% include 'inc/panels/tags.html' %}
+      {% plugin_right_page object %}
     </div>
+  </div>
+  <div class="row">
+    {% plugin_full_width_page object %}
   </div>
 {% endblock content %}
