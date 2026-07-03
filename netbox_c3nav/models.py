@@ -203,7 +203,7 @@ class MarkerStyle(NetBoxModel):
         config = {
             'icon': self.icon,
             'mdiIconSize': self.icon_size,
-            'iconRotation': self.icon_rotation,
+            'iconRotation': f'{self.icon_rotation}deg' if self.icon_rotation else None,
             'iconRotating': self.icon_is_rotating,
             'color': f'#{self.icon_color}' if self.icon_color else None,
             'markerSize': self.marker_size,
