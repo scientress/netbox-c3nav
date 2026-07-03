@@ -21,4 +21,5 @@ if get_plugin_config('netbox_c3nav', 'proxy_tiles', False):
 router = NetBoxRouter()
 router.register('positions', views.DevicePositionViewSet)
 router.register('overlays', views.OverlayViewSet)
+router.register('markerstyles', views.MarkerStyleViewSet)
 urlpatterns += router.urls

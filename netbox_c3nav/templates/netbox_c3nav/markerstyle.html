@@ -1,0 +1,134 @@
+{% extends 'generic/object.html' %}
+{% load helpers %}
+{% load plugins %}
+{% load render_table from django_tables2 %}
+{% load i18n %}
+
+{% block content %}
+  <div class="row mb-3">
+    <div class="col col-12 col-md-6">
+      <div class="card">
+
+        <h5 class="card-header">{% trans "Marker Style" %}</h5>
+
+        <table class="table table-hover attr-table">
+          <tr>
+            <th scope="row">{% trans "Name" %}</th>
+            <td>{{ object.name }}</td>
+          </tr>
+          <tr>
+            <th scope="row">{% trans "Description" %}</th>
+            <td>{{ object.description }}</td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="card">
+
+        <h5 class="card-header">{% trans "Icon" %}</h5>
+
+        <table class="table table-hover attr-table">
+          <tr>
+            <th scope="row">{% trans "Icon" %}</th>
+            <td>{% include 'netbox_c3nav/tables/columns/marker_icon.html' with value=object.icon %}</td>
+          </tr>
+          <tr>
+            <th scope="row">{% trans "Icon Name" %}</th>
+            <td>{{ object.icon }} <a href="https://pictogrammers.com/library/mdi/icon/{{ object.icon }}" target="_blank"><span class="mdi mdi-open-in-new"></span></a></td>
+          </tr>
+          <tr>
+            <th scope="row">{% trans "Icon Size" %}</th>
+            <td>{{ object.icon_size | default:'-' }}</td>
+          </tr>
+          <tr>
+            <th scope="row">{% trans "Icon Rotation" %}</th>
+            <td>{% if object.icon_rotation is not None %}{{ object.icon_rotation }}º{% else %}-{% endif %}</td>
+          </tr>
+          <tr>
+            <th scope="row">{% trans "Icon Is Rotating" %}</th>
+            <td>{{ object.icon_is_rotating | default:'-' }}</td>
+          </tr>
+          <tr>
+            <th scope="row">{% trans "Icon Color" %}</th>
+            <td>
+              {% if object.icon_color %}
+                <span class="color-label" style="background-color: #{{ object.icon_color }}">&nbsp;</span>
+              {% else %}
+                -
+              {% endif %}
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="card">
+
+        <h5 class="card-header">{% trans "Marker" %}</h5>
+
+        <table class="table table-hover attr-table">
+          <tr>
+            <th scope="row">{% trans "Marker Style" %}</th>
+            <td>{{ object.marker_style | default:'-' }}</td>
+          </tr>
+          <tr>
+            <th scope="row">{% trans "Marker Size" %}</th>
+            <td>{{ object.marker_size | default:'-' }}</td>
+          </tr>
+          <tr>
+            <th scope="row">{% trans "Marker Color" %}</th>
+            <td>
+              {% if object.marker_color %}
+                <span class="color-label" style="background-color: #{{ object.marker_color }}">&nbsp;</span>
+              {% else %}
+                -
+              {% endif %}
+            </td>
+          </tr>
+          <tr>
+            <th scope="row">{% trans "Add Background" %}</th>
+            <td>{{ object.add_background | default:'-' }}</td>
+          </tr>
+          <tr>
+            <th scope="row">{% trans "Background Color" %}</th>
+            <td>
+              {% if object.background_color %}
+                <span class="color-label" style="background-color: #{{ object.background_color }}">&nbsp;</span>
+              {% else %}
+                -
+              {% endif %}
+            </td>
+          </tr>
+        </table>
+      </div>
+      {% plugin_left_page object %}
+    </div>
+    <div class="col col-12 col-md-6">
+      <div class="card">
+        <h5 class="card-header">{% trans "Device Roles Applyied To" %}</h5>
+        <table class="table table-hover attr-table">
+          {% for dt in object.device_roles.all %}
+            <tr>
+              <td>{{ dt }}</td>
+            </tr>
+          {% endfor %}
+        </table>
+      </div>
+      <div class="card">
+        <h5 class="card-header">{% trans "Device Types Applyied To" %}</h5>
+        <table class="table table-hover attr-table">
+          {% for dt in object.device_types.all %}
+            <tr>
+              <td>{{ dt }}</td>
+            </tr>
+          {% endfor %}
+        </table>
+      </div>
+      {% include 'inc/panels/tags.html' %}
+      {% include 'inc/panels/custom_fields.html' %}
+      {% plugin_right_page object %}
+    </div>
+  </div>
+  <div class="row">
+    {% plugin_full_width_page object %}
+  </div>
+{% endblock content %}

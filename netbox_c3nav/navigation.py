@@ -35,6 +35,25 @@ menu = PluginMenu(
             #     link_text='Icons',
             # ),
             PluginMenuItem(
+                link='plugins:netbox_c3nav:markerstyle_list',
+                link_text='Marker Styles',
+                permissions=('netbox_c3nav.view_markerstyle',),
+                buttons=[
+                    PluginMenuButton(
+                        link='plugins:netbox_c3nav:markerstyle_add',
+                        title='Add',
+                        icon_class='mdi mdi-plus-thick',
+                        permissions=('netbox_c3nav.add_markerstyle', 'netbox_c3nav.change_markerstyle'),
+                    ),
+                    PluginMenuButton(
+                        link='plugins:netbox_c3nav:markerstyle_bulk_import',
+                        title='Import',
+                        icon_class='mdi mdi-upload',
+                        permissions=('netbox_c3nav.add_markerstyle', 'netbox_c3nav.change_markerstyle'),
+                    )
+                ]
+            ),
+            PluginMenuItem(
                 link='plugins:netbox_c3nav:overlay_list',
                 link_text='Overlays',
                 permissions=('netbox_c3nav.view_overlay',),

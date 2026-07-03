@@ -107,3 +107,55 @@ class OverlayBulkDeleteView(generic.BulkDeleteView):
     queryset = models.Overlay.objects.all()
     filterset = filtersets.OverlayFilterSet
     table = tables.OverlayTable
+
+
+@register_model_view(models.MarkerStyle)
+class MarkerStyleDetailView(GetRelatedModelsMixin, generic.ObjectView):
+    queryset = models.MarkerStyle.objects.all()
+
+
+@register_model_view(models.MarkerStyle, 'list', path='', detail=False)
+class MarkerStyleListView(generic.ObjectListView):
+    queryset = models.MarkerStyle.objects.all()
+    table = tables.MarkerStyleTable
+#     filterset = filtersets.MarkerStyleFilterSet
+#     filterset_form = forms.MarkerStyleFilterForm
+
+
+@register_model_view(models.MarkerStyle, 'add', detail=False)
+@register_model_view(models.MarkerStyle, 'edit')
+class MarkerStyleEditView(generic.ObjectEditView):
+    queryset = models.MarkerStyle.objects.all()
+    form = forms.MarkerStyleForm
+
+
+@register_model_view(models.MarkerStyle, 'delete')
+class MarkerStyleDeleteView(generic.ObjectDeleteView):
+    queryset = models.MarkerStyle.objects.all()
+
+
+@register_model_view(models.MarkerStyle, 'bulk_import', path='import', detail=False)
+class MarkerStyleBulkImportView(generic.BulkImportView):
+    queryset = models.MarkerStyle.objects.all()
+    model_form = forms.MarkerStyleBulkImportForm
+#
+#
+# @register_model_view(models.MarkerStyle, 'bulk_edit', path='edit', detail=False)
+# class MarkerStyleBulkEditView(generic.BulkEditView):
+#     queryset = models.MarkerStyle.objects.all()
+#     form = forms.MarkerStyleBulkEditForm
+#     table = tables.MarkerStyleTable
+#     filterset = filtersets.MarkerStyleFilterSet
+#
+#
+# @register_model_view(models.MarkerStyle, 'bulk_rename', path='rename', detail=False)
+# class MarkerStyleBulkRenameView(generic.BulkRenameView):
+#     queryset = models.MarkerStyle.objects.all()
+#     filterset = filtersets.MarkerStyleFilterSet
+#
+#
+# @register_model_view(models.MarkerStyle, 'bulk_delete', path='delete', detail=False)
+# class MarkerStyleBulkDeleteView(generic.BulkDeleteView):
+#     queryset = models.MarkerStyle.objects.all()
+#     filterset = filtersets.MarkerStyleFilterSet
+#     table = tables.MarkerStyleTable

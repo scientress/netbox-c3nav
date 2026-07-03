@@ -1,16 +1,27 @@
+from typing import Optional
+
+from dcim.models import DeviceType, DeviceRole
 from django.core.cache import cache
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.db.models import Q
 from django.urls import reverse
+from django.utils.safestring import mark_safe
+from django.utils.text import format_lazy
 from django.utils.translation import gettext_lazy as _
+
+from netbox.choices import ColorChoices
 from netbox.models import ChangeLoggedModel, NetBoxModel
 from netbox.plugins import get_plugin_config
+from utilities.fields import ColorField
 
-from netbox_c3nav.utils import file_upload_path
+from .choices import *
+from .utils import file_upload_path
 
 __all__ = (
     'DevicePosition',
+    'MarkerStyle',
+    'MarkerStyleBinding',
     'Overlay',
 )
 
@@ -45,6 +56,22 @@ class DevicePosition(ChangeLoggedModel):
                 'level_index': self.level_index,
             }
         }
+
+    @property
+    def markerConfig(self) -> Optional[dict]:
+        if style := (self.device.device_type.marker_style.first() or self.device.role.marker_style.first()):
+            return {
+                'icon': style.icon,
+                'mdiIconSize': style.icon_size,
+                'iconRotation': style.icon_rotation,
+                'iconRotating': style.icon_is_rotating,
+                'color': f'#{style.icon_color}' if style.icon_color else None,
+                'markerSize': style.marker_size,
+                'markerColor': f'#{style.marker_color}' if style.marker_color else None,
+                'markerStyle': style.marker_style,
+                'background': style.add_background,
+                'backgroundColor': f'#{style.background_color}' if style.background_color else None,
+            }
 
     class Meta:
         ordering = ('id',)
@@ -125,3 +152,79 @@ class Overlay(NetBoxModel):
     @property
     def bounds(self) -> tuple[tuple[float, float], tuple[float, float]]:
         return (float(self.left), float(self.bottom)), (float(self.right), float(self.top))
+
+
+class MarkerStyle(NetBoxModel):
+    _icon_library_url = 'https://pictogrammers.com/library/mdi/'
+    _empty_for_default = _('Leave empty to use theme default')
+
+    name = models.CharField(_('name'), max_length=50)
+    description = models.CharField(_('description'), max_length=200, blank=True)
+
+    device_roles = models.ManyToManyField(
+        to=DeviceRole,
+        # limit_choices_to={marker_style__isnull: True},
+        through='MarkerStyleBinding',
+        verbose_name=_('Device Roles'),
+    )
+    device_types = models.ManyToManyField(
+        to=DeviceType,
+        # limit_choices_to={marker_style__isnull: True},
+        through='MarkerStyleBinding',
+        verbose_name=_('Device Types'),
+    )
+
+    icon = models.CharField(
+        verbose_name=('Icon'),
+        max_length=100,
+        help_text=mark_safe(format_lazy(
+            _('The Material Design Icon to use. Check {mdi_url} for a list'),
+            mdi_url=f'<a href="{_icon_library_url}" target="_blank">{_icon_library_url}</a>'
+        )),
+    )
+    icon_size = models.PositiveIntegerField(_('Icon Size'), blank=True, null=True, help_text=_empty_for_default)
+    icon_rotation = models.FloatField(_('Icon Rotation'), blank=True, null=True, help_text=_empty_for_default)
+    icon_is_rotating = models.BooleanField(_('Icon Is Rotating'), blank=True, null=True, help_text=_empty_for_default)
+    icon_color = ColorField(_('Icon Color'), blank=True, null=True, help_text=_empty_for_default)
+
+    marker_style = models.CharField(_('Marker Style'), max_length=32, choices=MarkerStyleChoices, blank=True, null=True,
+                                    help_text=_empty_for_default)
+    marker_size = models.PositiveIntegerField(_('Marker Size'), blank=True, null=True, help_text=_empty_for_default)
+    marker_color = ColorField(_('Marker Color'), blank=True, null=True, help_text=_empty_for_default)
+
+    add_background = models.BooleanField(_('Add background below icon'), blank=True, null=True,
+                                         help_text=_empty_for_default)
+    background_color = ColorField(_('Background Color'), blank=True, null=True, help_text=_empty_for_default)
+
+    class Meta:
+        ordering = ('name',)
+        verbose_name = _('MarkerStyle')
+        verbose_name_plural = _('MarkerStyles')
+        default_related_name = 'marker_style'
+
+    def get_absolute_url(self):
+        return reverse('plugins:netbox_c3nav:markerstyle', args=[self.pk])
+
+    def __str__(self):
+        return f'{self.name}'
+
+
+class MarkerStyleBinding(models.Model):
+    marker_style = models.ForeignKey(MarkerStyle, on_delete=models.CASCADE, related_name='marker_style_bindings')
+    device_role = models.OneToOneField(DeviceRole, on_delete=models.CASCADE, null=True)
+    device_type = models.OneToOneField(DeviceType, on_delete=models.CASCADE, null=True)
+
+    class Meta:
+        verbose_name = _('Marker Style Binding')
+        verbose_name_plural = _('Marker Style Bindings')
+        default_related_name = 'marker_style_binding'
+        constraints = [
+            models.CheckConstraint(
+                name='device-role-or-type',
+                condition=(
+                        Q(device_role__isnull=False, device_type__isnull=True) |
+                        Q(device_role__isnull=True, device_type__isnull=False)
+                ),
+                violation_error_message=_('Binding can either be for a device role or a device type'),
+            ),
+        ]

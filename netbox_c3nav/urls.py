@@ -11,4 +11,6 @@ urlpatterns = (
     path("map/edit", views.MapView.as_view(edit=True), name="map_edit"),
     path("overlays/", include(get_model_urls('netbox_c3nav', 'overlay', detail=False))),
     path("overlays/<int:pk>/", include(get_model_urls('netbox_c3nav', 'overlay'))),
+    path("markerstyle/", include(get_model_urls('netbox_c3nav', 'markerstyle', detail=False))),
+    path("markerstyle/<int:pk>/", include(get_model_urls('netbox_c3nav', 'markerstyle'))),
 )

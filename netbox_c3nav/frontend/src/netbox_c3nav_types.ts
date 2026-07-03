@@ -1,4 +1,5 @@
 import {DCIM} from "./netbox_types";
+import {MdiIconOptions} from "./leaflet_icons";
 
 export interface C3navPosition {
   id?: number;
@@ -11,6 +12,7 @@ export interface C3navPosition {
   c3nav_cords?: string
   c3nav_url?: string
   geojson?: object
+  markerConfig?: MdiIconOptions
   created?: string
   last_updated?: string
 }

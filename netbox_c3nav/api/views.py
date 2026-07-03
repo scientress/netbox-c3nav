@@ -12,7 +12,7 @@ from rest_framework.views import APIView
 
 from .exceptions import IdempotencyException
 from .. import filtersets, models
-from .serializers import DevicePositionSerializer, OverlaySerializer
+from .serializers import DevicePositionSerializer, MarkerStyleSerializer, OverlaySerializer
 from ..c3nav import build_tile_url, get_tile_access_token
 
 
@@ -39,7 +39,16 @@ class IdempotencyViewSetMixin(NetBoxModelViewSet):
 
 
 class DevicePositionViewSet(IdempotencyViewSetMixin, NetBoxModelViewSet):
-    queryset = models.DevicePosition.objects.prefetch_related('device')
+    queryset = (
+        models.DevicePosition.objects.select_related(
+            'device',
+            'device__device_type',
+            'device__device_type__manufacturer',
+        )
+        .prefetch_related(
+            'device__device_type__marker_style',
+        )
+    )
     serializer_class = DevicePositionSerializer
     filterset_class = filtersets.DevicePositionFilterSet
 
@@ -55,6 +64,11 @@ class DevicePositionViewSet(IdempotencyViewSetMixin, NetBoxModelViewSet):
 class OverlayViewSet(NetBoxModelViewSet):
     queryset = models.Overlay.objects.prefetch_related('tags')
     serializer_class = OverlaySerializer
+
+
+class MarkerStyleViewSet(NetBoxModelViewSet):
+    queryset = models.MarkerStyle.objects.prefetch_related('tags')
+    serializer_class = MarkerStyleSerializer
 
 
 class TileProxyPermission(BasePermission):

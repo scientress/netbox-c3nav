@@ -126,7 +126,7 @@ export class DeviceMarker {
     }
     this.leafletMarker = L.marker(L.GeoJSON.coordsToLatLng([this.position.x, this.position.y]), {
       title: this.device.display || this.device.name,
-      icon: this.createLeafletIcon(),
+      icon: this.createLeafletIcon(this.getMarkerConfig()),
     })
     this.attachPopup()
     this.leafletMarker.on("dragstart", (e) => {
@@ -167,16 +167,20 @@ export class DeviceMarker {
   }
 
   private createLeafletIcon(options?: MdiIconOptions) {
-    const defaultOptions: MdiIconOptions = {
+    const iconOptions: MdiIconOptions = {
       icon: this.getIcon(),
       className: 'default-device',
       markerStyle: 'round',
       markerStyleChangeAnimated: true,
     }
-    if (typeof options === 'object') {
-      Object.assign(defaultOptions, options)
+    if (!!options) {
+      // filter null values so we don't override the defaults
+      options = Object.fromEntries(Object.entries(options).filter(([_, v]) => v != null));
+      Object.assign(iconOptions, options)
+      // devices with a configured style get the configured-device class
+      iconOptions['className'] = 'configured-device'
     }
-    return new MdiIcon(defaultOptions);
+    return new MdiIcon(iconOptions);
   }
 
   public attach(overlay: L.LayerGroup) {
@@ -406,9 +410,13 @@ export class DeviceMarker {
     this.draggingStyleElement?.remove()
   }
 
-  private getIcon(): string {
+  public getMarkerConfig(): MdiIconOptions | null {
+    return this.position?.markerConfig?? null
+  }
+
+  public getIcon(): string {
     // ToDo: get icon for device-role
-    return 'hexagon-multiple'
+    return this.getMarkerConfig()?.icon ?? 'hexagon-multiple'
   }
 
   public setIcon(iconName: string, temporary: boolean = false): void {
@@ -430,7 +438,8 @@ export class DeviceMarker {
 
   public getIconRotation(): string {
     // ToDo: get icon rotation for device-role
-    return (this.leafletMarker?.getIcon() as MdiIcon).options.iconRotation || ''
+    return this.getMarkerConfig()?.iconRotation ??
+      ((this.leafletMarker?.getIcon() as MdiIcon).options.iconRotation || '')
   }
 
   public setIconRotation(rotation: number|string, temporary: boolean = false): void {
@@ -471,7 +480,7 @@ export class DeviceMarker {
 
   public getIconColor(): string {
     // ToDo: get icon color for device-role
-    return ''
+    return this.getMarkerConfig()?.color ?? ''
   }
 
   public setIconColor(color: string, temporary: boolean = false): void {
@@ -493,7 +502,7 @@ export class DeviceMarker {
 
   public getMarkerColor(): string {
     // ToDo: get marker color for device-role
-    return ''
+    return this.getMarkerConfig()?.markerColor ?? ''
   }
 
   public setMarkerColor(color: string, temporary: boolean = false): void {
@@ -516,7 +525,7 @@ export class DeviceMarker {
 
   public getMarkerStyle(): MdiIconMarkerStyles {
     // ToDo: get marker style for device-role
-    return 'round'
+    return this.getMarkerConfig()?.markerStyle ?? 'round'
   }
 
   public setMarkerStyle(style: MdiIconMarkerStyles, temporary: boolean = false): void {
