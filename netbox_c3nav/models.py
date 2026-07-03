@@ -6,6 +6,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.db.models import Q
 from django.urls import reverse
+from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
 from django.utils.text import format_lazy
 from django.utils.translation import gettext_lazy as _
@@ -57,21 +58,11 @@ class DevicePosition(ChangeLoggedModel):
             }
         }
 
-    @property
-    def markerConfig(self) -> Optional[dict]:
+    @cached_property
+    def marker_config(self) -> Optional[dict]:
         if style := (self.device.device_type.marker_style.first() or self.device.role.marker_style.first()):
-            return {
-                'icon': style.icon,
-                'mdiIconSize': style.icon_size,
-                'iconRotation': style.icon_rotation,
-                'iconRotating': style.icon_is_rotating,
-                'color': f'#{style.icon_color}' if style.icon_color else None,
-                'markerSize': style.marker_size,
-                'markerColor': f'#{style.marker_color}' if style.marker_color else None,
-                'markerStyle': style.marker_style,
-                'background': style.add_background,
-                'backgroundColor': f'#{style.background_color}' if style.background_color else None,
-            }
+            return style.get_marker_config()
+        return None
 
     class Meta:
         ordering = ('id',)
@@ -207,6 +198,21 @@ class MarkerStyle(NetBoxModel):
 
     def __str__(self):
         return f'{self.name}'
+    
+    def get_marker_config(self) -> dict:
+        config = {
+            'icon': self.icon,
+            'mdiIconSize': self.icon_size,
+            'iconRotation': self.icon_rotation,
+            'iconRotating': self.icon_is_rotating,
+            'color': f'#{self.icon_color}' if self.icon_color else None,
+            'markerSize': self.marker_size,
+            'markerColor': f'#{self.marker_color}' if self.marker_color else None,
+            'markerStyle': self.marker_style,
+            'background': self.add_background,
+            'backgroundColor': f'#{self.background_color}' if self.background_color else None,
+        }
+        return {k: v for k, v in config.items() if v is not None}
 
 
 class MarkerStyleBinding(models.Model):

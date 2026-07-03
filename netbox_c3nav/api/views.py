@@ -52,9 +52,9 @@ class DevicePositionViewSet(IdempotencyViewSetMixin, NetBoxModelViewSet):
     serializer_class = DevicePositionSerializer
     filterset_class = filtersets.DevicePositionFilterSet
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get'], suffix='GeoJSON')
     def as_geojson(self, request):
-        qs = self.filterset_class(request.GET, self.get_queryset(), request=request).qs
+        qs = self.filter_queryset(self.get_queryset())
         return Response({
             'type': 'FeatureCollection',
             'features': [dp.geojson for dp in qs],
@@ -67,8 +67,26 @@ class OverlayViewSet(NetBoxModelViewSet):
 
 
 class MarkerStyleViewSet(NetBoxModelViewSet):
-    queryset = models.MarkerStyle.objects.prefetch_related('tags')
+    queryset = models.MarkerStyle.objects.prefetch_related('device_roles', 'device_types', 'tags')
     serializer_class = MarkerStyleSerializer
+
+    @action(detail=False, methods=['get'], suffix='Indexed List')
+    def indexed_marker_config(self, request):
+        qs = self.filter_queryset(self.get_queryset())
+
+        device_roles = dict()
+        device_types = dict()
+
+        for style in qs:
+            for dr in style.device_roles.all():
+                device_roles[dr.slug] = style.get_marker_config()
+            for dt in style.device_types.all():
+                device_types[dt.slug] = style.get_marker_config()
+
+        return Response({
+            'device_roles': device_roles,
+            'device_types': device_types,
+        })
 
 
 class TileProxyPermission(BasePermission):

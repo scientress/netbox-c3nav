@@ -411,7 +411,7 @@ export class DeviceMarker {
   }
 
   public getMarkerConfig(): MdiIconOptions | null {
-    return this.position?.markerConfig?? null
+    return this.position?.marker_config?? null
   }
 
   public getIcon(): string {

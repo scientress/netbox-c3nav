@@ -6,21 +6,26 @@ import {Map} from "./c3nav_map";
 import {MapCursor} from "./dnd-plugins";
 import {DeviceMarker, loadMarkers, loadOverlays} from "./datamodel";
 import {netBoxApi} from "./netbox_api";
-import {MdiIcon} from "./leaflet_icons";
+import {MdiIcon, MdiIconOptions} from "./leaflet_icons";
+import {IndexMarkerStyleResponse} from "./netbox_c3nav_types";
 
-// @ts-ignore
-window.netBoxApi = netBoxApi
 
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 const netbox_c3nav_settings = JSON.parse(document.getElementById('map').dataset.settings);
 const map = new Map(netbox_c3nav_settings.c3nav_url, netbox_c3nav_settings.api_key, netbox_c3nav_settings.tileserver_url)
 const unlockMarkersButton = document.getElementById('unlockMarkers');
 const markers: DeviceMarker[] = []
+const deviceRoleMarkerStyles: {[slug: string]: MdiIconOptions} = {}
+const deviceTypeMarkerStyles: {[slug: string]: MdiIconOptions} = {}
+
+window.netBoxApi = netBoxApi
+window.map = map
+
 map.bind(document.getElementById('map') as HTMLDivElement).then(async () => {
   console.log('loading overlays')
   await loadOverlays(map)
-  console.log('loading markers')
 
+  console.log('loading markers')
   markers.push(...await loadMarkers(map));
   if (unlockMarkersButton) {
     unlockMarkersButton.addEventListener('click', (event) => {
@@ -51,8 +56,14 @@ map.bind(document.getElementById('map') as HTMLDivElement).then(async () => {
   })
 })
 
-// @ts-ignore
-window.map = map
+netBoxApi.get('plugins/c3nav/markerstyles/indexed_marker_config/').then((r: IndexMarkerStyleResponse) => {
+  if (r.device_roles) {
+    Object.assign(deviceRoleMarkerStyles, r.device_roles)
+  }
+  if (r.device_types) {
+    Object.assign(deviceTypeMarkerStyles, r.device_types)
+  }
+})
 
 // drang and drop stuff
 
@@ -101,6 +112,18 @@ const droppable = new Droppable({
     ];
   }
   }, manager);
+
+manager.monitor.addEventListener('beforedragstart', (event) => {
+  const srcElement = event.operation?.source?.element as HTMLDivElement;
+  const style = deviceTypeMarkerStyles[srcElement.dataset.type] ??
+    deviceRoleMarkerStyles[srcElement.dataset.role];
+  if (style) {
+    const specificDragOverlayMarker = new MdiIcon(style)
+    overlayOffsetElement.replaceChildren(specificDragOverlayMarker.createIcon())
+  } else {
+    overlayOffsetElement.replaceChildren(dragOverlayMarker.createIcon())
+  }
+})
 
 manager.monitor.addEventListener('dragstart', (event) => {
   const {operation} = event;

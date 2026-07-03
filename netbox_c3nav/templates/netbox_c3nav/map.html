@@ -57,7 +57,7 @@
             <h2>Un-Positioned Items</h2>
             <ul class="list-group map-unpositioned-items">
                 {% for item in unpositioned_items %}
-                <li class="list-group-item" data-id="{{ item.id }}" data-name="{{ item.name }}" data-description="{{ item.description }}" date-url="{% url 'dcim:device' item.id %}">
+                <li class="list-group-item" data-id="{{ item.id }}" data-name="{{ item.name }}" data-description="{{ item.description }}" data-url="{% url 'dcim:device' item.id %}" data-role="{{ item.role.slug }}" data-type="{{ item.device_type.slug }}">
                     {{ item }} <span class="text-secondary">in {{ item.location }}</span>
                     {% if item.description %}<br><span class="text-secondary">{{ item.description }}</span>{% endif %}
                 </li>

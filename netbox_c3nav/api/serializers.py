@@ -1,19 +1,19 @@
 from dcim.api.serializers_.devices import DeviceSerializer
+from dcim.models import DeviceRole, DeviceType
 from rest_framework import serializers
 from netbox.api.serializers import ChangeLogMessageSerializer, NetBoxModelSerializer, ValidatedModelSerializer
 from ..models import *
 
 
 class DevicePositionSerializer(ChangeLogMessageSerializer, ValidatedModelSerializer):
-    url = serializers.HyperlinkedIdentityField(view_name='plugins-api:netbox_c3nav-api:deviceposition-detail')
     device = DeviceSerializer(nested=True)
 
     class Meta:
         model = DevicePosition
         fields = ['id', 'url', 'x', 'y', 'level_id', 'level_index', 'device', 'c3nav_cords', 'c3nav_url', 'geojson',
-                  'markerConfig', 'created', 'last_updated']
+                  'marker_config', 'created', 'last_updated']
         brief_fields = ['id', 'url', 'x', 'y', 'level_id', 'device_id']
-        read_only_fields = ['c3nav_cords', 'c3nav_url', 'geojson', 'markerConfig']
+        read_only_fields = ['c3nav_cords', 'c3nav_url', 'geojson', 'marker_config']
 
     def validate_x(self, value: float):
         return round(value, 2)
@@ -23,7 +23,6 @@ class DevicePositionSerializer(ChangeLogMessageSerializer, ValidatedModelSeriali
 
 
 class OverlaySerializer(NetBoxModelSerializer):
-    url = serializers.HyperlinkedIdentityField(view_name='plugins-api:netbox_c3nav-api:overlay-detail')
 
     class Meta:
         model = Overlay
@@ -36,9 +35,23 @@ class OverlaySerializer(NetBoxModelSerializer):
 
 
 class MarkerStyleSerializer(NetBoxModelSerializer):
+    device_roles = serializers.SlugRelatedField(
+        queryset=DeviceRole.objects.all(),
+        slug_field='slug',
+        required=False,
+        many=True,
+    )
+    device_types = serializers.SlugRelatedField(
+        queryset=DeviceType.objects.all(),
+        slug_field='slug',
+        required=False,
+        many=True,
+    )
+    marker_config = serializers.DictField(read_only=True, source='get_marker_config')
+
     class Meta:
         model = MarkerStyle
         fields = ['id', 'url', 'name', 'description', 'device_roles', 'device_types', 'icon', 'icon_size',
                   'icon_rotation', 'icon_is_rotating', 'icon_color', 'marker_style', 'marker_size', 'marker_color',
-                  'add_background', 'background_color']
-        # brief_fields = ['id', 'url', 'name', 'description', 'device_types']
+                  'add_background', 'background_color', 'marker_config', 'custom_fields', 'created', 'last_updated']
+        brief_fields = ['id', 'url', 'name', 'device_roles', 'device_types', 'marker_config']

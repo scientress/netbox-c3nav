@@ -31,8 +31,11 @@ class MapView(PermissionRequiredMixin, View):
 
     def get(self, request):
         if self.edit:
-            unpositioned_devices = (Device.objects.all().filter(rack__isnull=True, c3nav_position__isnull=True).
-                                    restrict(request.user, 'view'))
+            unpositioned_devices = (
+                Device.objects.all().filter(rack__isnull=True, c3nav_position__isnull=True)
+                .select_related('device_type', 'role')
+                .restrict(request.user, 'view')
+            )
         else:
             unpositioned_devices = []
 
