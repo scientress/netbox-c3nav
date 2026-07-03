@@ -121,8 +121,8 @@ class MarkerStyleDetailView(GetRelatedModelsMixin, generic.ObjectView):
 class MarkerStyleListView(generic.ObjectListView):
     queryset = models.MarkerStyle.objects.all()
     table = tables.MarkerStyleTable
-#     filterset = filtersets.MarkerStyleFilterSet
-#     filterset_form = forms.MarkerStyleFilterForm
+    filterset = filtersets.MarkerStyleFilterSet
+    filterset_form = forms.MarkerStyleFilterForm
 
 
 @register_model_view(models.MarkerStyle, 'add', detail=False)
@@ -141,24 +141,37 @@ class MarkerStyleDeleteView(generic.ObjectDeleteView):
 class MarkerStyleBulkImportView(generic.BulkImportView):
     queryset = models.MarkerStyle.objects.all()
     model_form = forms.MarkerStyleBulkImportForm
-#
-#
-# @register_model_view(models.MarkerStyle, 'bulk_edit', path='edit', detail=False)
-# class MarkerStyleBulkEditView(generic.BulkEditView):
-#     queryset = models.MarkerStyle.objects.all()
-#     form = forms.MarkerStyleBulkEditForm
-#     table = tables.MarkerStyleTable
-#     filterset = filtersets.MarkerStyleFilterSet
-#
-#
-# @register_model_view(models.MarkerStyle, 'bulk_rename', path='rename', detail=False)
-# class MarkerStyleBulkRenameView(generic.BulkRenameView):
-#     queryset = models.MarkerStyle.objects.all()
-#     filterset = filtersets.MarkerStyleFilterSet
-#
-#
-# @register_model_view(models.MarkerStyle, 'bulk_delete', path='delete', detail=False)
-# class MarkerStyleBulkDeleteView(generic.BulkDeleteView):
-#     queryset = models.MarkerStyle.objects.all()
-#     filterset = filtersets.MarkerStyleFilterSet
-#     table = tables.MarkerStyleTable
+
+
+@register_model_view(models.MarkerStyle, 'bulk_edit', path='edit', detail=False)
+class MarkerStyleBulkEditView(generic.BulkEditView):
+    queryset = models.MarkerStyle.objects.all()
+    form = forms.MarkerStyleBulkEditForm
+    table = tables.MarkerStyleTable
+    filterset = filtersets.MarkerStyleFilterSet
+
+    def post_save_operations(self, form, obj):
+        super().post_save_operations(form, obj)
+
+        # Add/remove linked device roles and types
+        if form.cleaned_data.get('add_device_role', None):
+            obj.device_roles.add(*form.cleaned_data['add_device_role'])
+        if form.cleaned_data.get('remove_device_role', None):
+            obj.device_roles.remove(*form.cleaned_data['remove_device_role'])
+        if form.cleaned_data.get('add_device_type', None):
+            obj.device_types.add(*form.cleaned_data['add_device_type'])
+        if form.cleaned_data.get('remove_device_type', None):
+            obj.device_types.remove(*form.cleaned_data['remove_device_type'])
+
+
+@register_model_view(models.MarkerStyle, 'bulk_rename', path='rename', detail=False)
+class MarkerStyleBulkRenameView(generic.BulkRenameView):
+    queryset = models.MarkerStyle.objects.all()
+    filterset = filtersets.MarkerStyleFilterSet
+
+
+@register_model_view(models.MarkerStyle, 'bulk_delete', path='delete', detail=False)
+class MarkerStyleBulkDeleteView(generic.BulkDeleteView):
+    queryset = models.MarkerStyle.objects.all()
+    filterset = filtersets.MarkerStyleFilterSet
+    table = tables.MarkerStyleTable

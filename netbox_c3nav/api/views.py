@@ -64,11 +64,13 @@ class DevicePositionViewSet(IdempotencyViewSetMixin, NetBoxModelViewSet):
 class OverlayViewSet(NetBoxModelViewSet):
     queryset = models.Overlay.objects.prefetch_related('tags')
     serializer_class = OverlaySerializer
+    filterset_class = filtersets.OverlayFilterSet
 
 
 class MarkerStyleViewSet(NetBoxModelViewSet):
     queryset = models.MarkerStyle.objects.prefetch_related('device_roles', 'device_types', 'tags')
     serializer_class = MarkerStyleSerializer
+    filterset_class = filtersets.MarkerStyleFilterSet
 
     @action(detail=False, methods=['get'], suffix='Indexed List')
     def indexed_marker_config(self, request):
