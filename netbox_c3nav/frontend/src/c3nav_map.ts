@@ -10,6 +10,7 @@ import {LevelControl, OverlayControl} from "./c3nav_controls"
 import markerIconUrl from 'leaflet/dist/images/marker-icon.png';
 import markerIconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png';
 import markerShadowUrl from 'leaflet/dist/images/marker-shadow.png';
+import {FullscreenControl} from "./leaflet-controlls";
 
 L.Icon.Default.mergeOptions({
   iconUrl: markerIconUrl,
@@ -80,6 +81,11 @@ export class Map {
     });
     this.map.createPane('backgroundPane')
     this.map.fitBounds(GeoJSON.coordsToLatLngs(this.map_settings.initial_bounds))
+
+    if (document.fullscreenEnabled) {
+      const fullscreenControl = new FullscreenControl()
+      fullscreenControl.addTo(this.map)
+    }
 
     if (!this.tileserverUrl) {
       this.tileserverUrl = (this.map_settings.tile_server || `${this.instanceUrl}/map`)

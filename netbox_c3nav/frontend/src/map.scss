@@ -94,12 +94,41 @@ div.map-item-list {
 /* all controls */
 
 .leaflet-control {
+  --leaflet-control-background-color: color-mix(in srgb, var(--tblr-body-bg) 80%, transparent);
+
   body[data-bs-theme="light"] & {
     --leaflet-control-border-color: color-mix(in srgb, var(--tblr-secondary-color) 40%, transparent);
   }
 
   body[data-bs-theme="dark"] & {
     --leaflet-control-border-color: color-mix(in srgb, var(--tblr-border-color) 40%, transparent);
+  }
+
+  background-color: var(--leaflet-control-background-color);
+  border: 2px solid var(--leaflet-control-border-color);
+}
+
+.leaflet-control.leaflet-control-fullscreen {
+  width: 40px;
+  height: 40px;
+  background-clip: padding-box;
+  border-radius: 0.5rem;
+  text-align: center;
+  cursor: pointer;
+
+  span {
+    font-size: 36px;
+    line-height: 36px;
+  }
+
+  .leaflet-touch & {
+    width: 48px;
+    height: 48px;
+
+    span {
+      font-size: 44px;
+      line-height: 44px;
+    }
   }
 }
 
@@ -181,7 +210,7 @@ div.map-item-list {
     --leaflet-control-overlays-pin-border-color: rgba(255, 255, 255, 0.7);
   }
 
-  background-color: color-mix(in srgb, var(--tblr-body-bg) 80%, transparent);
+  background-color: var(--leaflet-control-background-color);
   background-clip: padding-box;
   border-radius: 0.5rem;
   border: 2px solid var(--leaflet-control-overlays-border-color);
