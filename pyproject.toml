@@ -23,7 +23,7 @@ classifiers=[
     'Topic :: System :: Networking',
 ]
 
-requires-python = ">=3.13"
+requires-python = ">=3.12"
 
 [project.optional-dependencies]
 ide = [
